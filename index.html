@@ -1,3 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peru Clicker: Crisis & Defensas</title>
+    <style>
+        body { font-family: 'Arial Black', sans-serif; text-align: center; background-color: #fff5f5; color: #333; margin: 0; padding: 15px; }
+        .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; max-width: 1200px; margin: 0 auto; text-align: left; }
+        @media(max-width: 800px) { .grid-layout { grid-template-columns: 1fr; } }
+        
+        .container { background: white; padding: 15px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.15); border: 4px solid #d91414; margin-bottom: 15px; }
+        h1 { color: #d91414; margin: 0; font-size: 26px; text-transform: uppercase; text-align: center; }
+        
+        .seccion-deuda { background: #343a40; color: #fff; padding: 12px; border-radius: 10px; margin-bottom: 15px; border-left: 6px solid #ffc107; }
+        .seccion-deuda h3 { margin: 0 0 5px 0; font-size: 14px; color: #ffc107; text-transform: uppercase; }
+        .seccion-deuda p { margin: 3px 0; font-size: 12px; font-family: sans-serif; }
+        
+        .seccion-defensa { background: #581845; color: white; padding: 12px; border-radius: 10px; margin-bottom: 15px; border-left: 6px solid #c70039; }
+        .seccion-defensa h3 { margin: 0 0 5px 0; font-size: 14px; color: #ff5733; text-transform: uppercase; }
+        
+        .stats { background: #fee; padding: 10px; border-radius: 10px; margin: 10px 0; font-size: 13px; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+        #contador { font-size: 32px; color: #b00f0f; margin: 5px 0; display: block; text-align: center; }
+        
+        .clicker-box { text-align: center; position: relative; padding: 10px; background: #fff8f8; border-radius: 15px; border: 2px dashed #d91414; }
+        #paloma-btn { font-size: 110px; background: none; border: none; cursor: pointer; transition: transform 0.05s; user-select: none; margin: 5px 0; padding: 0; }
+        #paloma-btn:active { transform: scale(0.85); }
+        
+        #paloma-oro { position: fixed; font-size: 60px; cursor: pointer; z-index: 999; display: none; user-select: none; animation: flotarOro 1.5s ease-in-out infinite alternate; }
+        @keyframes flotarOro { 0% { transform: translateY(0px); } 100% { transform: translateY(-20px); } }
+        
+        .seccion-titulo { background: #d91414; color: white; padding: 5px; border-radius: 5px; font-size: 14px; margin-top: 15px; text-transform: uppercase; text-align: center; }
+        .scroll-box { max-height: 240px; overflow-y: auto; border: 1px solid #ddd; border-radius: 10px; padding: 5px; background: #fafafa; margin-top: 5px; }
+        
+        .fila-item { display: flex; justify-content: space-between; align-items: center; background: white; padding: 8px; margin: 5px 0; border-radius: 8px; border-left: 4px solid #d91414; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .info { font-size: 11px; font-family: sans-serif; }
+        .info strong { display: block; font-size: 13px; font-family: 'Arial Black', sans-serif; }
+        
+        .fila-item button { background: #28a745; color: white; border: none; padding: 6px 10px; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 11px; min-width: 105px; }
+        .fila-item button:disabled { background: #bbb; cursor: not-allowed; }
+        
+        .fila-rebirth { border-left: 4px solid #8a2be2; }
+        .fila-rebirth button { background: #8a2be2; }
+        #btn-main-rebirth { background: #8a2be2; color: white; width: 100%; padding: 10px; font-size: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        #btn-main-rebirth:disabled { background: #ccc; cursor: not-allowed; }
+        
+        .btn-accion { background: #ffc107 !important; color: #212529 !important; }
+        .btn-accion:disabled { background: #bbb !important; color: #fff !important; }
+
+        .logro-bloqueado { opacity: 0.4; filter: grayscale(100%); background: #f0f0f0 !important; border-left: 4px solid #666 !important; }
+        .logro-desbloqueado { border-left: 4px solid #ff9900 !important; }
+    </style>
+</head>
+<body>
+
+<h1>Peru Clicker: Edición Crisis General 🐦‍⬛</h1>
+
+<div class="grid-layout" style="margin-top: 15px; margin-bottom: 0;">
+    <div class="seccion-deuda">
+        <h3>⚖️ Sunat & Cobranzas Coactivas</h3>
+        <p><strong>Acreedor:</strong> <span id="deuda-acreedor">Caja Piura</span></p>
+        <p><strong>Concepto:</strong> <span id="deuda-concepto">Factura emitida por Sedapal</span></p>
+        <p><strong>Deuda Acumulada:</strong> <span id="deuda-cantidad" style="color:#ffc107; font-weight:bold;">0</span> Palomas</p>
+        <p><strong>Estado Tributario:</strong> <span id="sunat-status" style="color:#5cd65c; font-weight:bold;">Al día</span></p>
+        <button id="btn-pagar-deuda" class="btn-accion" style="width:100%; margin-top:5px; padding: 8px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;" onclick="pagarImpuestos()">Pagar Impuesto / Deuda</button>
+    </div>
+
+    <div class="seccion-defensa">
+        <h3>🦅 Alerta de Halcones (Invasión)</h3>
+        <p><strong>Estado del Cielo:</strong> <span id="halcon-status" style="color:#5cd65c; font-weight:bold;">Zona Segura</span></p>
+        <p><strong>Tus Palomas Defensoras:</strong> <span id="defensores-cant" style="font-weight:bold;">0</span> soldados</p>
+        <p><strong>Poder de Ataque Halcón:</strong> <span id="halcon-fuerza">0</span></p>
+        <button id="btn-comprar-defensor" class="btn-accion" style="width:100%; margin-top:5px; padding: 8px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;" onclick="comprarDefensor()">Reclutar Paloma Defensora (Precio: <span id="precio-defensor">50</span> P.)</button>
+    </div>
+</div>
+
+<div class="grid-layout">
+    <div>
+        <div class="container">
+            <div class="stats">
+                <div>Palomas por Seg (PPS): <strong id="pps-txt">0</strong></div>
+                <div>Multiplicador Rebirth: <strong id="mult-txt">x1.0</strong></div>
+                <div>Total Renacimientos: <strong id="rebirths-txt">0</strong></div>
+                <div>Poder Espiritual: <strong id="poder-txt">0</strong></div>
+            </div>
+            
+            <span id="contador">0 Palomas</span>
+            
+            <div class="clicker-box">
+                <button id="paloma-btn" onclick="clickPaloma()">🐦‍⬛</button>
+            </div>
+
+            <button id="btn-main-rebirth" onclick="hacerRebirth()">Renacer<br><small id="rebirth-req-txt">Requiere 50,000 Palomas</small></button>
+        </div>
+        
+        <div class="container">
+            <div class="seccion-titulo">🌀 Árbol Ancestral (Habilidades)</div>
+            <div class="scroll-box" id="contenedor-rebirth"></div>
+        </div>
+    </div>
+
+    <div>
+        <div class="container">
+            <div class="seccion-titulo">🛒 Mercado Peruano (Negocios e Items)</div>
+            <div class="scroll-box" id="contenedor-tienda"></div>
+        </div>
+
+        <div class="container">
+            <div class="seccion-titulo">🏆 Logros Absurdos</div>
+            <div class="scroll-box" id="contenedor-logros"></div>
+        </div>
+    </div>
+</div>
+
+<div id="paloma-oro" onclick="clickPalomaOro()">🕊️✨</div>
+
 <script>
     // --- ESTADO DEL JUEGO ---
     let palomas = 0;
@@ -48,220 +164,211 @@
     }
 
     function calcularPPS() {
-        let ppsBase = tiendaObjetos.reduce((total, obj) => total + (obj.pps * obj.cantidad), 0);
-        let multHabilidades = habilidadesAncestrales.reduce((total, hab) => hab.comprado ? total * hab.multiplicador : total, 1);
-        return ppsBase * multiplicadorRebirth * multHabilidades;
-    }
-
-    // --- SISTEMA ECONÓMICO Y TIENDA ---
-    function comprarObjeto(id) {
-        const item = tiendaObjetos.find(o => o.id === id);
-        if (palomas >= item.costo) {
-            palomas -= item.costo;
-            item.cantidad++;
-            item.costo = Math.floor(item.costo * 1.15); // Aumenta precio un 15%
-            renderizarTienda();
-            actualizarPantalla();
-        }
-    }
-
-    function comprarDefensor() {
-        let precio = precioDefensorBase + (palomasDefensoras * 25);
-        if (palomas >= precio) {
-            palomas -= precio;
-            palomasDefensoras++;
-            actualizarPantalla();
-        }
-    }
-
-    // --- EVENTOS: SUNAT Y HALCONES ---
-    function pagarImpuestos() {
-        if (palomas >= impuestoAcumulado) {
-            palomas -= impuestoAcumulado;
-            impuestoAcumulado = 0;
-            sunatCongelado = false;
-            document.getElementById("sunat-status").innerText = "Al día";
-            document.getElementById("sunat-status").style.color = "#5cd65c";
-            actualizarPantalla();
-        } else {
-            alert("No tienes suficientes palomas para pagar la deuda coactiva.");
-        }
-    }
-
-    function lanzarCrisisSunat() {
-        if (sunatCongelado || palomas < 100) return;
-        impuestoAcumulado = Math.floor(palomas * 0.20) + 50; 
-        document.getElementById("deuda-acreedor").innerText = acreedoresRandom[Math.floor(Math.random() * acreedoresRandom.length)];
-        document.getElementById("deuda-concepto").innerText = conceptosRandom[Math.floor(Math.random() * conceptosRandom.length)];
-        document.getElementById("sunat-status").innerText = "¡EMBARGO COACTIVO!";
-        document.getElementById("sunat-status").style.color = "#ff5733";
-        sunatCongelado = true;
-        actualizarPantalla();
-    }
-
-    function lanzarInvasionHalcon() {
-        if (halconesAtacando) return;
-        halconesAtacando = true;
-        fuerzaAtaqueHalcon = Math.floor(Math.random() * 5) + 1 + totalRebirths;
-        
-        document.getElementById("halcon-status").innerText = "🚨 ¡INVASIÓN EN CURSO! 🚨";
-        document.getElementById("halcon-status").style.color = "#ff5733";
-        document.getElementById("halcon-fuerza").innerText = fuerzaAtaqueHalcon;
-
-        setTimeout(() => {
-            if (palomasDefensoras >= fuerzaAtaqueHalcon) {
-                let recompensa = fuerzaAtaqueHalcon * 100;
-                palomas += recompensa;
-                alert(`¡Tus palomas defendieron el cielo con éxito! Ganaste ${recompensa} palomas.`);
-            } else {
-                let robadas = Math.floor(palomas * 0.30);
-                palomas -= robadas;
-                palomasDefensoras = 0;
-                alert(`Los halcones eran muy fuertes. Destruyeron tus defensas y se llevaron ${robadas} palomas.`);
-            }
-            halconesAtacando = false;
-            fuerzaAtaqueHalcon = 0;
-            document.getElementById("halcon-status").innerText = "Zona Segura";
-            document.getElementById("halcon-status").style.color = "#5cd65c";
-            document.getElementById("halcon-fuerza").innerText = "0";
-            actualizarPantalla();
-        }, 6000); 
-    }
-
-    // --- PALOMA DE ORO ---
-    function spawnPalomaOro() {
-        const btnOro = document.getElementById("paloma-oro");
-        let x = Math.random() * (window.innerWidth - 100);
-        let y = Math.random() * (window.innerHeight - 100);
-        btnOro.style.left = x + "px";
-        btnOro.style.top = y + "px";
-        btnOro.style.display = "block";
-        
-        setTimeout(() => { btnOro.style.display = "none"; }, 5000); 
-    }
-
-    function clickPalomaOro() {
-        let pps = calcularPPS();
-        let bono = Math.max(100, Math.floor(pps * 30));
-        palomas += bono;
-        document.getElementById("paloma-oro").style.display = "none";
-        alert(`¡Clickaste la paloma de oro! +${bono} palomas.`);
-        actualizarPantalla();
-    }
-
-    // --- REBIRTH Y ÁRBOL ANCESTRAL ---
-    function hacerRebirth() {
-        if (palomas >= 50000) {
-            palomas = 0;
-            totalRebirths++;
-            multiplicadorRebirth += 0.5; 
-            poderEspiritual += 1;
-            
-            tiendaObjetos.forEach(o => { o.cantidad = 0; });
-            
-            renderizarTienda();
-            renderizarArbol();
-            actualizarPantalla();
-            alert("¡Has renacido! Ahora eres más fuerte y posees Poder Espiritual.");
-        }
-    }
-
-    function comprarHabilidad(id) {
-        const hab = habilidadesAncestrales.find(h => h.id === id);
-        if (poderEspiritual >= hab.costoPoder && !hab.comprado) {
-            poderEspiritual -= hab.costoPoder;
-            hab.comprado = true;
-            renderizarArbol();
-            actualizarPantalla();
-        }
-    }
-
-    // --- INTERFAZ DE USUARIO (RENDERS) ---
-    function actualizarPantalla() {
-        document.getElementById("contador").innerText = `${Math.floor(palomas).toLocaleString()} Palomas`;
-        document.getElementById("pps-txt").innerText = calcularPPS().toFixed(1);
-        document.getElementById("mult-txt").innerText = `x${multiplicadorRebirth.toFixed(1)}`;
-        document.getElementById("rebirths-txt").innerText = totalRebirths;
-        document.getElementById("poder-txt").innerText = poderEspiritual;
-        document.getElementById("deuda-cantidad").innerText = impuestoAcumulado.toLocaleString();
-        document.getElementById("defensores-cant").innerText = palomasDefensoras;
-        
-        let precioDef = precioDefensorBase + (palomasDefensoras * 25);
-        document.getElementById("precio-defensor").innerText = precioDef;
-
-        document.getElementById("btn-main-rebirth").disabled = palomas < 50000;
-        document.getElementById("btn-pagar-deuda").disabled = palomas < impuestoAcumulado || impuestoAcumulado === 0;
-        document.getElementById("btn-comprar-defensor").disabled = palomas < precioDef;
-
-        // Actualizar dinámicamente el estado de deshabilitado de los botones de la tienda
-        tiendaObjetos.forEach(item => {
-            const btn = document.getElementById(`btn-tienda-${item.id}`);
-            if (btn) btn.disabled = palomas < item.costo;
-        });
-
-        // Actualizar los botones del árbol de habilidades
-        habilidadesAncestrales.forEach(hab => {
-            const btn = document.getElementById(`btn-hab-${hab.id}`);
-            if (btn) btn.disabled = poderEspiritual < hab.costoPoder || hab.comprado;
-        });
-    }
-
-    function renderizarTienda() {
-        const contenedor = document.getElementById("contenedor-tienda");
-        contenedor.innerHTML = "";
-        tiendaObjetos.forEach(item => {
-            contenedor.innerHTML += `
-                <div class="fila-item">
-                    <div class="info">
-                        <strong>${item.nombre} (x${item.cantidad})</strong>
-                        Precio: ${item.costo} P. | +${item.pps} PPS c/u
-                    </div>
-                    <button id="btn-tienda-${item.id}" onclick="comprarObjeto(${item.id})">Comprar</button>
-                </div>
-            `;
-        });
-    }
-
-    function renderizarArbol() {
+        if (sunatCongelado) return 0;
 Usa el código con precaución.
-const contenedor = document.getElementById("contenedor-rebirth");
-contenedor.innerHTML = "";
-habilidadesAncestrales.forEach(hab => {
-contenedor.innerHTML += <div class="fila-item fila-rebirth"> <div class="info"> <strong>${hab.nombre}</strong> ${hab.efecto} | Costo: ${hab.costoPoder} P.E. </div> <button id="btn-hab-${hab.id}" onclick="comprarHabilidad(${hab.id})"> ${hab.comprado ? 'Adquirido' : 'Desbloquear'} </button> </div>;
-});
+let ppsBase = tiendaObjetos.reduce((total, obj) => total + (obj.pps * obj.cantidad), 0);
+let multHabilidades = habilidadesAncestrales.reduce((total, hab) => hab.comprado ? total * hab.multiplicador : total, 1);
+return ppsBase * multiplicadorRebirth * multHabilidades;
 }
-function renderizarLogros() {
-const contenedor = document.getElementById("contenedor-logros");
-contenedor.innerHTML = "";
-logros.forEach(logro => {
-let clase = logro.desbloqueado ? "logro-desbloqueado" : "logro-bloqueado";
-contenedor.innerHTML += <div class="fila-item ${clase}"> <div class="info"> <strong>${logro.nombre}</strong> ${logro.desc} </div> <span style="font-size:16px;">${logro.desbloqueado ? '🏆' : '🔒'}</span> </div>;
-});
+// --- SISTEMA ECONÓMICO Y TIENDA ---
+function comprarObjeto(id) {
+const item = tiendaObjetos.find(o => o.id === id);
+if (item && palomas >= item.costo) {
+palomas -= item.costo;
+item.cantidad++;
+item.costo = Math.floor(item.costo * 1.15);
+renderizarTienda();
+actualizarPantalla();
 }
+}
+function comprarDefensor() {
+let precio = precioDefensorBase + (palomasDefensoras * 25);
+if (palomas >= precio) {
+palomas -= precio;
+palomasDefensoras++;
+verificarLogros();
+actualizarPantalla();
+}
+}
+// --- EVENTOS: SUNAT Y HALCONES ---
+function pagarImpuestos() {
+if (palomas >= impuestoAcumulado) {
+palomas -= impuestoAcumulado;
+impuestoAcumulado = 0;
+sunatCongelado = false;
+let statusTxt = document.getElementById("sunat-status");
+if (statusTxt) {
+statusTxt.innerText = "Al día";
+statusTxt.style.color = "#5cd65c";
+}
+actualizarPantalla();
+} else {
+alert("No tienes suficientes palomas para pagar la deuda coactiva.");
+}
+}
+function lanzarCrisisSunat() {
+if (sunatCongelado || palomas < 100) return;
+impuestoAcumulado = Math.floor(palomas * 0.20) + 50;
+if(document.getElementById("deuda-acreedor")) document.getElementById("deuda-acreedor").innerText = acreedoresRandom[Math.floor(Math.random() * acreedoresRandom.length)];
+if(document.getElementById("deuda-concepto")) document.getElementById("deuda-concepto").innerText = conceptosRandom[Math.floor(Math.random() * conceptosRandom.length)];
+let statusTxt = document.getElementById("sunat-status");
+if (statusTxt) {
+statusTxt.innerText = "¡EMBARGO COACTIVO!";
+statusTxt.style.color = "#ff5733";
+}
+sunatCongelado = true;
+actualizarPantalla();
+}
+function lanzarInvasionHalcon() {
+if (halconesAtacando) return;
+halconesAtacando = true;
+fuerzaAtaqueHalcon = Math.floor(Math.random() * 5) + 1 + totalRebirths;
+if(document.getElementById("halcon-status")) {
+document.getElementById("halcon-status").innerText = "🚨 ¡INVASIÓN EN CURSO! 🚨";
+document.getElementById("halcon-status").style.color = "#ff5733";
+}
+if(document.getElementById("halcon-fuerza")) document.getElementById("halcon-fuerza").innerText = fuerzaAtaqueHalcon;
+setTimeout(() => {
+if (palomasDefensoras >= fuerzaAtaqueHalcon) {
+palomasDefensoras -= fuerzaAtaqueHalcon;
+let recompensa = fuerzaAtaqueHalcon * 100;
+palomas += recompensa;
+alert(¡Tus palomas defendieron el cielo con éxito! Ganaste ${recompensa} palomas.);
+} else {
+let robadas = Math.floor(palomas * 0.30);
+palomas -= robadas;
+palomasDefensoras = 0;
+alert(Los halcones eran muy fuertes. Destruyeron tus defensas y se llevaron ${robadas} palomas.);
+}
+halconesAtacando = false;
+fuerzaAtaqueHalcon = 0;
+if(document.getElementById("halcon-status")) {
+document.getElementById("halcon-status").innerText = "Zona Segura";
+document.getElementById("halcon-status").style.color = "#5cd65c";
+}
+if(document.getElementById("halcon-fuerza")) document.getElementById("halcon-fuerza").innerText = "0";
+actualizarPantalla();
+}, 6000);
+}
+// --- PALOMA DE ORO ---
+function spawnPalomaOro() {
+const btnOro = document.getElementById("paloma-oro");
+if (!btnOro) return;
+let x = Math.random() * (window.innerWidth - 100);
+let y = Math.random() * (window.innerHeight - 100);
+btnOro.style.left = x + "px";
+btnOro.style.top = y + "px";
+btnOro.style.display = "block";
+setTimeout(() => { btnOro.style.display = "none"; }, 5000);
+}
+function clickPalomaOro() {
+let pps = calcularPPS();
+let bono = Math.max(100, Math.floor(pps * 30));
+palomas += bono;
+if(document.getElementById("paloma-oro")) document.getElementById("paloma-oro").style.display = "none";
+alert(¡Clickaste la paloma de oro! +${bono} palomas.);
+actualizarPantalla();
+}
+// --- REBIRTH Y ÁRBOL ANCESTRAL ---
+function hacerRebirth() {
+if (palomas >= 50000) {
+palomas = 0;
+totalRebirths++;
+multiplicadorRebirth += 0.5;
+poderEspiritual += 1;
+tiendaObjetos.forEach(o => { o.cantidad = 0; });
+renderizarTienda();
+renderizarArbol();
+actualizarPantalla();
+alert("¡Has renacido! Ahora eres más fuerte y posees Poder Espiritual.");
+}
+}
+function comprarHabilidad(id) {
+const hab = habilidadesAncestrales.find(h => h.id === id);
+if (hab && poderEspiritual >= hab.costoPoder && !hab.comprado) {
+poderEspiritual -= hab.costoPoder;
+hab.comprado = true;
+renderizarArbol();
+actualizarPantalla();
+}
+}
+// --- SISTEMA DE LOGROS ---
 function verificarLogros() {
-let cambios = false;
 logros.forEach(logro => {
 if (!logro.desbloqueado && logro.req()) {
 logro.desbloqueado = true;
-cambios = true;
 }
 });
-if (cambios) renderizarLogros();
+renderizarLogros();
 }
-// --- BUCLE PRINCIPAL DEL JUEGO (GAME LOOP) ---
+// --- INTERFAZ DE USUARIO (RENDERS) ---
+function renderizarTienda() {
+const contTienda = document.getElementById("contenedor-tienda");
+if (!contTienda) return;
+contTienda.innerHTML = "";
+tiendaObjetos.forEach(obj => {
+contTienda.innerHTML +=  <div class="fila-item"> <div class="info"> <strong>${obj.nombre} (x${obj.cantidad})</strong> Precio: ${obj.costo} P. | +${obj.pps} PPS </div> <button onclick="comprarObjeto(${obj.id})" ${palomas < obj.costo ? 'disabled' : ''}>Comprar</button> </div>;
+});
+}
+function renderizarArbol() {
+const contArbol = document.getElementById("contenedor-rebirth");
+if (!contArbol) return;
+contArbol.innerHTML = "";
+habilidadesAncestrales.forEach(hab => {
+contArbol.innerHTML +=  <div class="fila-item fila-rebirth"> <div class="info"> <strong>${hab.nombre}</strong> ${hab.efecto} | Costo: ${hab.costoPoder} PE </div> <button onclick="comprarHabilidad(${hab.id})" ${poderEspiritual < hab.costoPoder || hab.comprado ? 'disabled' : ''}> ${hab.comprado ? 'Adquirido' : 'Desbloquear'} </button> </div>;
+});
+}
+function renderizarLogros() {
+const contLogros = document.getElementById("contenedor-logros");
+if (!contLogros) return;
+contLogros.innerHTML = "";
+logros.forEach(logro => {
+let clase = logro.desbloqueado ? "logro-desbloqueado" : "logro-bloqueado";
+let icono = logro.desbloqueado ? "✅" : "🔒";
+contLogros.innerHTML +=  <div class="fila-item ${clase}"> <div class="info"> <strong>${icono} ${logro.nombre}</strong> ${logro.desc} </div> </div>;
+});
+}
+function actualizarPantalla() {
+if (!document.getElementById("contador")) return;
+document.getElementById("contador").innerText = ${Math.floor(palomas).toLocaleString()} Palomas;
+if(document.getElementById("pps-txt")) document.getElementById("pps-txt").innerText = calcularPPS().toFixed(1);
+if(document.getElementById("mult-txt")) document.getElementById("mult-txt").innerText = x${multiplicadorRebirth.toFixed(1)};
+if(document.getElementById("rebirths-txt")) document.getElementById("rebirths-txt").innerText = totalRebirths;
+if(document.getElementById("poder-txt")) document.getElementById("poder-txt").innerText = poderEspiritual;
+if(document.getElementById("deuda-cantidad")) document.getElementById("deuda-cantidad").innerText = impuestoAcumulado.toLocaleString();
+let precioDef = precioDefensorBase + (palomasDefensoras * 25);
+if(document.getElementById("precio-defensor")) document.getElementById("precio-defensor").innerText = precioDef;
+if(document.getElementById("defensores-cant")) document.getElementById("defensores-cant").innerText = palomasDefensoras;
+let btnRebirth = document.getElementById("btn-main-rebirth");
+if(btnRebirth) btnRebirth.disabled = palomas < 50000;
+let btnDefensor = document.getElementById("btn-comprar-defensor");
+if(btnDefensor) btnDefensor.disabled = palomas < precioDef;
+let btnDeuda = document.getElementById("btn-pagar-deuda");
+if(btnDeuda) btnDeuda.disabled = palomas < impuestoAcumulado || impuestoAcumulado === 0;
+const btnsTienda = document.querySelectorAll("#contenedor-tienda button");
+tiendaObjetos.forEach((obj, index) => {
+if(btnsTienda[index]) btnsTienda[index].disabled = palomas < obj.costo;
+});
+}
+// --- INTERVALOS DE TIEMPO REPETITIVOS ---
 setInterval(() => {
-if (!sunatCongelado) {
 palomas += calcularPPS() / 10;
-}
 actualizarPantalla();
 verificarLogros();
 }, 100);
-// Eventos Aleatorios
-setInterval(() => { if (Math.random() < 0.15) lanzarCrisisSunat(); }, 20000);
-setInterval(() => { if (Math.random() < 0.20) lanzarInvasionHalcon(); }, 30000);
-setInterval(() => { if (Math.random() < 0.30) spawnPalomaOro(); }, 15000);
-// Inicialización del juego al cargar
+setInterval(() => {
+if (Math.random() < 0.2) lanzarCrisisSunat();
+}, 20000);
+setInterval(() => {
+if (Math.random() < 0.15) lanzarInvasionHalcon();
+}, 30000);
+setInterval(() => {
+if (Math.random() < 0.3) spawnPalomaOro();
+}, 25000);
+// --- CARGA INICIAL ---
+window.onload = () => {
 renderizarTienda();
 renderizarArbol();
 renderizarLogros();
 actualizarPantalla();
+};
