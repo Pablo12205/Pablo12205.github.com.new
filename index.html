@@ -167,7 +167,7 @@
         if (sunatCongelado) return 0;
 Usa el código con precaución.
 let ppsBase = tiendaObjetos.reduce((total, obj) => total + (obj.pps * obj.cantidad), 0);
-let multHabilidades = habilidadesAncestrales.reduce((total, hab) => hab.comprado ? total * hab.multiplicador : total, 1);
+let multHabilidades = habilidadesAncestrales.reduce((total, hab) => { return hab.comprado ? total * hab.multiplicador : total; }, 1);
 return ppsBase * multiplicadorRebirth * multHabilidades;
 }
 // --- SISTEMA ECONÓMICO Y TIENDA ---
@@ -787,3 +787,6 @@ renderizarArbol();
 renderizarLogros();
 actualizarPantalla();
 };
+    <script>
+        <body>
+        <html>
