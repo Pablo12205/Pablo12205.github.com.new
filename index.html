@@ -143,14 +143,14 @@
 
     const logrosAbsurdos = [
         { id: 1, nombre: "Primer aleteo", desc: "Consigue tu primera paloma", cond: () => palomas >= 1, desbloqueado: false },
-        { id: 2, nombre: "Empresario Informal", desc: "Compra tu primer Combo Tía Veneno", cond: () => tiendaObjetos[0].cantidad >= 1, desbloqueado: false },
+        { id: 2, nombre: "Empresario Informal", desc: "Compra tu primer negocio ambulante", cond: () => tiendaObjetos[0].cantidad >= 1, desbloqueado: false },
         { id: 3, nombre: "Magnate de la Av. Abancay", desc: "Llega a 10,000 palomas", cond: () => palomas >= 10000, desbloqueado: false }
     ];
 
     // --- FUNCIONES CORE ---
     function clickPaloma() {
         let poderClick = 1;
-        if (habilidadesAncestrales[0].comprado) poderClick *= 2; // Multiplicador del Inti
+        if (habilidadesAncestrales[0].comprado) poderClick *= 2; 
         palomas += poderClick * multiplicadorRebirth;
         actualizarPantalla();
     }
@@ -160,17 +160,17 @@
         tiendaObjetos.forEach(obj => {
             total += obj.pps * obj.cantidad;
         });
-        if (habilidadesAncestrales[1].comprado) total *= 1.1; // +10% Huayno Power
+        if (habilitiesAncestrales && habilidadesAncestrales[1].comprado) total *= 1.1; 
         return total * multiplicadorRebirth;
     }
 
     function comprarObjeto(id) {
         const item = tiendaObjetos.find(o => o.id === id);
-        if (palomas >= item.costo) {
+        if (item && palomas >= item.costo) {
             palomas -= item.costo;
+            item.cantidad++;
 Usa el código con precaución.
-item.cantidad++;
-item.costo = Math.round(item.costo * 1.15); // Sube el precio un 15%
+item.costo = Math.round(item.costo * 1.15);
 actualizarPantalla();
 renderTienda();
 }
@@ -179,9 +179,8 @@ function hacerRebirth() {
 if (palomas >= 50000) {
 palomas = 0;
 totalRebirths++;
-poderEspiritual += 2; // Da 2 puntos por renacimiento
-multiplicadorRebirth += 0.5; // +50% producción global
-// Reiniciar negocios de la tienda
+poderEspiritual += 2;
+multiplicadorRebirth += 0.5;
 tiendaObjetos.forEach(o => o.cantidad = 0);
 actualizarPantalla();
 renderTienda();
@@ -190,7 +189,7 @@ renderAncestral();
 }
 function comprarHabilidad(id) {
 const hab = habilidadesAncestrales.find(h => h.id === id);
-if (poderEspiritual >= hab.costoEspiritual && !hab.comprado) {
+if (hab && poderEspiritual >= hab.costoEspiritual && !hab.comprado) {
 poderEspiritual -= hab.costoEspiritual;
 hab.comprado = true;
 actualizarPantalla();
@@ -212,9 +211,10 @@ impuestoAcumulado = 0;
 actualizarPantalla();
 }
 }
-// --- RENDERIZADO DINÁMICO DE ELEMENTOS ---
+// --- RENDERIZADO DINÁMICO ---
 function renderTienda() {
 const contenedor = document.getElementById("contenedor-tienda");
+if (!contenedor) return;
 contenedor.innerHTML = "";
 tiendaObjetos.forEach(obj => {
 contenedor.innerHTML += <div class="fila-item"> <div class="info"> <strong>${obj.nombre} (x${obj.cantidad})</strong> Precio: ${obj.costo} P. | +${obj.pps} PPS c/u </div> <button onclick="comprarObjeto(${obj.id})" ${palomas < obj.costo ? 'disabled' : ''}>Comprar</button> </div>;
@@ -222,6 +222,7 @@ contenedor.innerHTML += <div class="fila-item"> <div class="info"> <strong>${obj
 }
 function renderAncestral() {
 const contenedor = document.getElementById("contenedor-rebirth");
+if (!contenedor) return;
 contenedor.innerHTML = "";
 habilidadesAncestrales.forEach(hab => {
 contenedor.innerHTML += <div class="fila-item fila-rebirth"> <div class="info"> <strong>${hab.nombre}</strong> Efecto: ${hab.efecto} | Costo: ${hab.costoEspiritual} P. Espiritual </div> <button onclick="comprarHabilidad(${hab.id})" ${hab.comprado ? 'disabled style="background:#666;"' : (poderEspiritual < hab.costoEspiritual ? 'disabled' : '')}> ${hab.comprado ? 'Adquirido' : 'Desbloquear'} </button> </div>;
@@ -229,6 +230,7 @@ contenedor.innerHTML += <div class="fila-item fila-rebirth"> <div class="info"> 
 }
 function renderLogros() {
 const contenedor = document.getElementById("contenedor-logros");
+if (!contenedor) return;
 contenedor.innerHTML = "";
 logrosAbsurdos.forEach(logro => {
 if (!logro.desbloqueado && logro.cond()) {
@@ -243,14 +245,11 @@ document.getElementById("pps-txt").innerText = calcularPPS().toFixed(1);
 document.getElementById("mult-txt").innerText = x${multiplicadorRebirth.toFixed(1)};
 document.getElementById("rebirths-txt").innerText = totalRebirths;
 document.getElementById("poder-txt").innerText = poderEspiritual;
-// Botón Rebirth
 document.getElementById("btn-main-rebirth").disabled = palomas < 50000;
-// Botón Defensores
 let precioDef = Math.round(precioDefensorBase * Math.pow(1.2, palomasDefensoras));
 document.getElementById("precio-defensor").innerText = precioDef;
 document.getElementById("defensores-cant").innerText = palomasDefensoras;
 document.getElementById("btn-comprar-defensor").disabled = palomas < precioDef;
-// Sección Deudas SUNAT
 document.getElementById("deuda-cantidad").innerText = impuestoAcumulado;
 const btnPagar = document.getElementById("btn-pagar-deuda");
 if (impuestoAcumulado > 0) {
@@ -262,7 +261,6 @@ document.getElementById("sunat-status").innerText = "Al día";
 document.getElementById("sunat-status").style.color = "#5cd65c";
 btnPagar.disabled = true;
 }
-// Habilitar/Deshabilitar botones de compra según billetera sin re-renderizar todo
 const botonesTienda = document.querySelectorAll("#contenedor-tienda button");
 tiendaObjetos.forEach((obj, index) => {
 if (botonesTienda[index]) botonesTienda[index].disabled = palomas < obj.costo;
@@ -270,35 +268,31 @@ if (botonesTienda[index]) botonesTienda[index].disabled = palomas < obj.costo;
 }
 // --- BUCLE PRINCIPAL (TICKER) ---
 setInterval(() => {
-palomas += calcularPPS() / 10; // Suma la décima parte cada 100ms para fluidez
+palomas += calcularPPS() / 10;
 actualizarPantalla();
 renderLogros();
 }, 100);
-// --- EVENTOS ALEATORIOS (SUNAT Y HALCONES) ---
+// --- EVENTOS ALEATORIOS ---
 setInterval(() => {
-// 1. Cobranza Coactiva de la SUNAT (20% de probabilidad)
 if (Math.random() < 0.2 && impuestoAcumulado === 0 && palomas > 500) {
 document.getElementById("deuda-acreedor").innerText = acreedoresRandom[Math.floor(Math.random() * acreedoresRandom.length)];
 document.getElementById("deuda-concepto").innerText = conceptosRandom[Math.floor(Math.random() * conceptosRandom.length)];
-let deudaBase = Math.round(palomas * 0.15); // Te quitan el 15%
-if (habilidadesAncestrales[2].comprado) deudaBase = Math.round(deudaBase * 0.5); // Descuento escudo
+let deudaBase = Math.round(palomas * 0.15);
+if (habilidadesAncestrales[2].comprado) deudaBase = Math.round(deudaBase * 0.5);
 impuestoAcumulado = deudaBase;
 actualizarPantalla();
 }
-// 2. Ataque de Halcones (15% de probabilidad)
 if (Math.random() < 0.15 && palomas > 1000) {
 let fuerzaHalcón = Math.floor(Math.random() * 5) + 1;
 document.getElementById("halcon-fuerza").innerText = fuerzaHalcón;
 if (palomasDefensoras >= fuerzaHalcón) {
-// Ganas la batalla
 document.getElementById("halcon-status").innerText = "¡Invasión Repelida! 💪";
 document.getElementById("halcon-status").style.color = "#5cd65c";
-palomasDefensoras -= Math.floor(fuerzaHalcón / 2); // Mueren algunos defensores
+palomasDefensoras -= Math.floor(fuerzaHalcón / 2);
 } else {
-// Pierdes palomas
 document.getElementById("halcon-status").innerText = "¡Asalto de Halcones! 🦅 (Perdiste Palomas)";
 document.getElementById("halcon-status").style.color = "#d91414";
-palomas = Math.round(palomas * 0.8); // Te roban el 20%
+palomas = Math.round(palomas * 0.8);
 palomasDefensoras = 0;
 }
 setTimeout(() => {
@@ -308,25 +302,28 @@ document.getElementById("halcon-fuerza").innerText = "0";
 actualizarPantalla();
 }, 5000);
 }
-}, 12000); // Se ejecuta un chequeo cada 12 segundos
+}, 12000);
 // --- EVENTO PALOMA DE ORO ---
 function spawnPalomaOro() {
 const btnOro = document.getElementById("paloma-oro");
+if (!btnOro) return;
 const x = Math.random() * (window.innerWidth - 100);
 const y = Math.random() * (window.innerHeight - 100);
 btnOro.style.left = ${x}px;
 btnOro.style.top = ${y}px;
 btnOro.style.display = "block";
-setTimeout(() => { btnOro.style.display = "none"; }, 6000); // Desaparece en 6 seg
+setTimeout(() => { btnOro.style.display = "none"; }, 6000);
 }
 function clickPalomaOro() {
-palomas += Math.max(500, calcularPPS() * 60); // Da 1 minuto de producción o 500 mínimo
-document.getElementById("paloma-oro").style.display = "none";
+palomas += Math.max(500, calcularPPS() * 60);
+document.getElementById("paloma-oro").style.style.display = "none";
 actualizarPantalla();
 }
-setInterval(() => { if (Math.random() < 0.3) spawnPalomaOro(); }, 25000); // 30% chance cada 25 segundos
+setInterval(() => { if (Math.random() < 0.3) spawnPalomaOro(); }, 25000);
 // --- INICIALIZACIÓN ---
+window.onload = function() {
 renderTienda();
 renderAncestral();
 renderLogros();
-actualizarPantalla()
+actualizarPantalla();
+};
