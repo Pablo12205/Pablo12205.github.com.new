@@ -59,7 +59,7 @@
         <p><strong>Concepto:</strong> <span id="deuda-concepto">Factura emitida por Sedapal</span></p>
         <p><strong>Deuda Acumulada:</strong> <span id="deuda-cantidad" style="color:#ffc107; font-weight:bold;">0</span> Palomas</p>
         <p><strong>Bono de Impuesto Pago:</strong> +<span id="bono-impuesto-txt">0</span>% a la producción global</p>
-        <button id="btn-pagar-deuda" class="fila-item button btn-accion" style="width:100%; margin-top:5px;" onclick="pagarImpuestos()">Pagar Impuesto / Deuda</button>
+        <button id="btn-pagar-deuda" class="button btn-accion" style="width:100%; margin-top:5px; padding: 8px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;" onclick="pagarImpuestos()">Pagar Impuesto / Deuda</button>
     </div>
 
     <div class="seccion-defensa">
@@ -67,7 +67,7 @@
         <p><strong>Estado del Cielo:</strong> <span id="halcon-status" style="color:#5cd65c; font-weight:bold;">Zona Segura</span></p>
         <p><strong>Tus Palomas Defensoras:</strong> <span id="defensores-cant" style="font-weight:bold;">0</span> soldados</p>
         <p><strong>Poder de Ataque Halcón:</strong> <span id="halcon-fuerza">0</span></p>
-        <button id="btn-comprar-defensor" class="fila-item button btn-accion" style="width:100%; margin-top:5px;" onclick="comprarDefensor()">Reclutar Paloma Defensora (Precio: <span id="precio-defensor">50</span> P.)</button>
+        <button id="btn-comprar-defensor" class="button btn-accion" style="width:100%; margin-top:5px; padding: 8px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;" onclick="comprarDefensor()">Reclutar Paloma Defensora (Precio: <span id="precio-defensor">50</span> P.)</button>
     </div>
 </div>
 
@@ -123,125 +123,143 @@
     ];
 
     const tiendaRebirth = [
-        { id: 1, nombre: "Click de Oro Inka", costo: 1, efecto: "Click +2 base", comprado: false },
+        { id: 1, nombre: "Click de Oro Inka", costo: 1,  efecto: "Click +2 base", comprado: false },
         { id: 2, nombre: "Espíritu del Cóndor", costo: 3, efecto: "+25% Producción Global", comprado: false }
     ];
 
-    function actualizarUI() {
-        document.getElementById("contador").innerText = Math.floor(palomas) + " Palomas";
-        document.getElementById("pps-txt").innerText = obtenerPPS().toFixed(1);
-        document.getElementById("mult-txt").innerText = "x" + multiplicadorRebirth.toFixed(1);
-        document.getElementById("rebirths-txt").innerText = totalRebirths;
-        document.getElementById("poder-txt").innerText = poderEspiritual;
-        document.getElementById("deuda-cantidad").innerText = Math.floor(impuestoAcumulado);
-        document.getElementById("bono-impuesto-txt").innerText = bonoImpuestosPagados;
-        document.getElementById("defensores-cant").innerText = palomasDefensoras;
-        document.getElementById("precio-defensor").innerText = Math.floor(precioDefensorBase * Math.pow(1.3, palomasDefensoras));
-        document.getElementById("btn-main-rebirth").disabled = palomas < obtenerRebirthCost();
-        document.getElementById("rebirth-req-txt").innerText = "Requiere " + obtenerRebirthCost() + " Palomas";
-        renderizarTiendas();
-    }
-
     function obtenerPPS() {
-        let basePPS = tiendaObjetos.reduce((total, obj) => total + (obj.pps * obj.cant), 0);
-        let multiplicadorGlobal = multiplicadorRebirth * (1 + (bonoImpuestosPagados / 100));
+        let ppsBase = 0;
+        tiendaObjetos.forEach(item => { ppsBase += item.pps * item.cant; });
+        let multiplicadorGlobal = multiplicadorRebirth;
         if (tiendaRebirth[1].comprado) multiplicadorGlobal += 0.25;
-        return basePPS * multiplicadorGlobal;
-    }
-
-    function obtenerRebirthCost() {
-        return 50000 * Math.pow(4, totalRebirths);
+        let bonoImpuestoEfecto = 1 + (bonoImpuestosPagados / 100);
+        return ppsBase * multiplicadorGlobal * bonoImpuestoEfecto;
     }
 
     function clickPaloma() {
-        let poderClick = baseClick;
-        if (tiendaRebirth[0].comprado) poderClick += 2;
-        palomas += poderClick * multiplicadorRebirth;
+        let ganancia = baseClick;
+        if (tiendaRebirth[0].comprado) ganancia += 2;
+        palomas += ganancia;
         actualizarUI();
     }
 
-    function renderizarTiendas() {
-        const contTienda = document.getElementById("contenedor-tienda");
-        contTienda.innerHTML = "";
-        tiendaObjetos.forEach(obj => {
-            let itemCosto = Math.floor(obj.costo * Math.pow(1.15, obj.cant));
+    function comprarObjeto(id) {
+        const item = tiendaObjetos.find(i => i.id === id);
+        if (palomas >= item.costo) {
+            palomas -= item.costo;
+            item.cant++;
+            item.costo = Math.floor(item.costo * 1.15);
+            actualizarUI();
+            renderizarTiendas();
+        }
+    }
+
+    function comprarHabilidadRebirth(id) {
+        const hab = tiendaRebirth.find(h => h.id === id);
+        if (poderEspiritual >= hab.costo && !hab.comprado) {
+            poderEspiritual -= hab.costo;
+            hab.comprado = true;
+            actualizarUI();
+            renderizarTiendas();
+        }
+    }
+
+    function pagarImpuestos() {
+        if (palomas >= impuestoAcumulado && impuestoAcumulado > 0) {
+            palomas -= impuestoAcumulado;
+            impuestoAcumulado = 0;
+            bonoImpuestosPagados += 5;
+            actualizarUI();
+        }
+    }
+
+    function comprarDefensor() {
+        let precio = Math.floor(precioDefensorBase * Math.pow(1.2, palomasDefensoras));
+        if (palomas >= precio) {
+            palomas -= precio;
+            palomasDefensoras++;
+            actualizarUI();
+        }
+    }
+
+    function hacerRebirth() {
+        if (palomas >= 50000) {
+            totalRebirths++;
 Usa el código con precaución.
-contTienda.innerHTML += <div class="fila-item"> <div class="info"><strong>${obj.nombre} (x${obj.cant})</strong>Costo: ${itemCosto} P. | +${obj.pps} PPS</div> <button ${palomas < itemCosto ? 'disabled' : ''} onclick="comprarObjeto(${obj.id})">Comprar</button> </div>;
+poderEspiritual += 1 + Math.floor(palomas / 100000);
+multiplicadorRebirth += 0.5;
+palomas = 0;
+palomasDefensoras = 0;
+tiendaObjetos.forEach(item => { item.cant = 0; });
+actualizarUI();
+renderizarTiendas();
+}
+}
+function renderizarTiendas() {
+const contTienda = document.getElementById("contenedor-tienda");
+contTienda.innerHTML = "";
+tiendaObjetos.forEach(item => {
+contTienda.innerHTML +=  <div class="fila-item"> <div class="info"> <strong>${item.nombre} (x${item.cant})</strong> Precio: ${item.costo} P. | +${item.pps} PPS </div> <button onclick="comprarObjeto(${item.id})" ${palomas < item.costo ? 'disabled' : ''}>Comprar</button> </div>;
 });
 const contRebirth = document.getElementById("contenedor-rebirth");
 contRebirth.innerHTML = "";
-tiendaRebirth.forEach(rb => {
-contRebirth.innerHTML += <div class="fila-item fila-rebirth"> <div class="info"><strong>${rb.nombre}</strong>${rb.efecto} | Costo: ${rb.costo} Poder</div> <button ${poderEspiritual < rb.costo || rb.comprado ? 'disabled' : ''} onclick="comprarHabilidad(${rb.id})">${rb.comprado ? 'Adquirido' : 'Desbloquear'}</button> </div>;
+tiendaRebirth.forEach(hab => {
+contRebirth.innerHTML +=  <div class="fila-item fila-rebirth"> <div class="info"> <strong>${hab.nombre}</strong> ${hab.efecto} | Costo: ${hab.costo} PE </div> <button onclick="comprarHabilidadRebirth(${hab.id})" ${poderEspiritual < hab.costo || hab.comprado ? 'disabled' : ''}> ${hab.comprado ? 'Adquirido' : 'Desbloquear'} </button> </div>;
 });
 }
-function comprarObjeto(id) {
-let obj = tiendaObjetos.find(o => o.id === id);
-let itemCosto = Math.floor(obj.costo * Math.pow(1.15, obj.cant));
-if (palomas >= itemCosto) {
-palomas -= itemCosto;
-obj.cant++;
-actualizarUI();
+function actualizarUI() {
+document.getElementById("contador").innerText = Math.floor(palomas) + " Palomas";
+document.getElementById("pps-txt").innerText = obtenerPPS().toFixed(1);
+document.getElementById("mult-txt").innerText = "x" + multiplicadorRebirth.toFixed(1);
+document.getElementById("rebirths-txt").innerText = totalRebirths;
+document.getElementById("poder-txt").innerText = poderEspiritual;
+let precioDef = Math.floor(precioDefensorBase * Math.pow(1.2, palomasDefensoras));
+document.getElementById("precio-defensor").innerText = precioDef;
+document.getElementById("defensores-cant").innerText = palomasDefensoras;
+document.getElementById("deuda-cantidad").innerText = impuestoAcumulado;
+document.getElementById("bono-impuesto-txt").innerText = bonoImpuestosPagados;
+document.getElementById("btn-main-rebirth").disabled = palomas < 50000;
+document.getElementById("btn-comprar-defensor").disabled = palomas < precioDef;
+document.getElementById("btn-pagar-deuda").disabled = palomas < impuestoAcumulado || impuestoAcumulado === 0;
+// Deshabilitar botones de tiendas dinámicamente si no alcanza la plata
+const btnsTienda = document.querySelectorAll("#contenedor-tienda button");
+tiendaObjetos.forEach((item, index) => {
+if(btnsTienda[index]) btnsTienda[index].disabled = palomas < item.costo;
+});
 }
-}
-function comprarHabilidad(id) {
-let rb = tiendaRebirth.find(r => r.id === id);
-if (poderEspiritual >= rb.costo && !rb.comprado) {
-poderEspiritual -= rb.costo;
-rb.comprado = true;
-actualizarUI();
-}
-}
-function comprarDefensor() {
-let costo = Math.floor(precioDefensorBase * Math.pow(1.3, palomasDefensoras));
-if (palomas >= costo) {
-palomas -= costo;
-palomasDefensoras++;
-actualizarUI();
-}
-}
-function pagarImpuestos() {
-if (palomas >= impuestoAcumulado && impuestoAcumulado > 0) {
-palomas -= impuestoAcumulado;
-impuestoAcumulado = 0;
-bonoImpuestosPagados += 5;
-actualizarUI();
-}
-}
-function hacerRebirth() {
-let cost = obtenerRebirthCost();
-if (palomas >= cost) {
-palomas = 0;
-totalRebirths++;
-poderEspiritual += totalRebirths * 2;
-multiplicadorRebirth += 0.5;
-tiendaObjetos.forEach(o => o.cant = 0);
-actualizarUI();
-}
-}
-// Eventos aleatorios del Sistema
+// Bucle principal: producción por segundo
 setInterval(() => {
-// Acumulación de la SUNAT
-if (obtenerPPS() > 0) {
-impuestoAcumulado += (obtenerPPS() * 0.12);
-if (Math.random() < 0.2) {
+palomas += obtenerPPS() / 10;
+actualizarUI();
+}, 100);
+// Sistema de crisis azarosa: Sunat cobra impuestos
+setInterval(() => {
+if (Math.random() < 0.25 && impuestoAcumulado === 0) {
+impuestoAcumulado = Math.floor(10 + Math.random() * (obtenerPPS() * 30 + 10));
 document.getElementById("deuda-acreedor").innerText = acreedoresRandom[Math.floor(Math.random() * acreedoresRandom.length)];
 document.getElementById("deuda-concepto").innerText = conceptosRandom[Math.floor(Math.random() * conceptosRandom.length)];
+actualizarUI();
 }
-}
-// Sistema de Ataque de Halcones
-if (!halconesAtacando && Math.random() < 0.15 && obtenerPPS() > 5) {
+}, 15000);
+// Sistema de crisis azarosa: Invasión de Halcones
+setInterval(() => {
+if (!halconesAtacando && Math.random() < 0.2) {
 halconesAtacando = true;
-fuerzaAtaqueHalcon = Math.floor(Math.random() * (totalRebirths + 2) * 5) + 2;
-document.getElementById("halcon-status").innerText = "¡INVASIÓN EN CURSO!";
-document.getElementById("halcon-status").style.color = "#ff5733";
+fuerzaAtaqueHalcon = Math.floor(1 + Math.random() * (totalRebirths * 3 + 2));
+document.getElementById("halcon-status").innerText = "⚠️ ¡BAJO ATAQUE! 🦅";
+document.getElementById("halcon-status").style.color = "#ff3333";
 document.getElementById("halcon-fuerza").innerText = fuerzaAtaqueHalcon;
 setTimeout(() => {
 if (palomasDefensoras >= fuerzaAtaqueHalcon) {
-palomasDefensoras -= Math.floor(fuerzaAtaqueHalcon / 2);
-palomas += fuerzaAtaqueHalcon * 50;
+palomasDefensoras -= fuerzaAtaqueHalcon;
+let recompensa = fuerzaAtaqueHalcon * 100;
+palomas += recompensa;
+alert(¡Tus palomas defendieron el cielo! Ganaste ${recompensa} palomas.);
 } else {
-palomas = Math.floor(palomas * 0.7);
 palomasDefensoras = 0;
+let perdida = Math.floor(palomas * 0.2);
+palomas -= perdida;
+alert(¡Los halcones rompieron tus defensas! Perdiste ${perdida} palomas.);
 }
 halconesAtacando = false;
 document.getElementById("halcon-status").innerText = "Zona Segura";
@@ -250,22 +268,9 @@ document.getElementById("halcon-fuerza").innerText = "0";
 actualizarUI();
 }, 6000);
 }
-// Spawn Paloma Dorada
-if (Math.random() < 0.1 && document.getElementById("paloma-oro").style.display !== "block") {
-let pOro = document.getElementById("paloma-oro");
-pOro.style.top = Math.random() * 80 + "vh";
-pOro.style.left = Math.random() * 80 + "vw";
-pOro.style.display = "block";
-setTimeout(() => { pOro.style.display = "none"; }, 5000);
-}
-// Bucle pasivo de PPS
-palomas += obtenerPPS();
+}, 25000);
+// Inicialización del juego
+window.onload = () => {
+renderizarTiendas();
 actualizarUI();
-}, 1000);
-function clickPalomaOro() {
-palomas += (obtenerPPS() * 30) + 100;
-document.getElementById("paloma-oro").style.display = "none";
-actualizarUI();
-}
-actualizarUI();
-
+};
