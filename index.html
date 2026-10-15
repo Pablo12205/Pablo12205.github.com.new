@@ -113,344 +113,358 @@
 
     // Variables de ataque e invasión del Cartel
     var cartelActivo = false, cartelAtacando = false, cartelTiempoLlegada = 20;
-    var cartelVidaTotal = 100, cartelVidaActual = 100;
+    var cartelVidaTotal = 100, cartelVidaActual = 100, castigoPPSActivo = 0;
 
-    // 1. Inicialización de Datos Dinámicos (100 Objetos, 100 Mejoras, Defensas)
-    function inicializarJuego() {
-        // Mercado Peruano: 100 niveles / objetos
-        for (let i = 1; i <= 100; i++) {
-            tiendaObjetos.push({
-                id: i,
-                nombre: `Negocio Local Nivel ${i}`,
-                costoBase: Math.floor(15 * Math.pow(1.28, i)),
-                costo: Math.floor(15 * Math.pow(1.28, i)),
-                pps: Math.floor(0.2 * i * Math.pow(1.15, i)),
-                cantidad: 0
-            });
-        }
+    var pMeme = ["Chupetín","Tapir","Inca Kola","Ceviche","Pollo a la Brasa","Cachín","Paloma","Llama","Cuy","Tigresillo","Chacalón","Susy Díaz","Melcochita","Huayno","Mototaxi","Pisco","Papa","Chicha","Olluquito","Ají de Gallina"];
+    var sMeme = ["Trujillo","590","Supremo","Galáctico","Incaico","Bravazo","Legendario","Chichero","Criollo","Serrano","Costeño","Selvático","Automático","de la Esquina","VIP","Sayayín","Pro","de Oro","Místico","Espacial"];
+    var pRebirth = ["Fuerza","Bendición","Espíritu","Legado","Furia","Aliento","Poder","Alma","Corona","Manto","Rayo","Escudo","Luz","Sabiduría","Ancestros","Tótem","Pacto","Esencia","Riqueza","Destino"];
+    var sRebirth = ["del Inca","Machu Picchu","del Cóndor","Nazca","Chavín","del Sol","de la Luna","del Titicaca","Sagrado","Eterno","Inmortal","Imperial","Cósmico","Divino","Total","Supremo","Ancestral","Runas","Mitológico","Inquebrantable"];
+    var tDeuda = ["Notificación de la", "Corte Eléctrico de", "Garantía de Embargo de", "Multa Coactiva de", "Orden de Desalojo de", "Préstamo Pendiente de", "Recibo de"];
+    var cDeuda = ["SUNAT", "Luz del Sur", "Sedapal", "Caja Huancayo", "Banco de la Nación", "Internet Claro", "Arbitrios de la Muni", "Crédito de la Esquina"];
 
-        // Tienda Ancestral: 100 niveles de mejoras con Poder Espiritual
-        for (let i = 1; i <= 100; i++) {
-            tiendaRebirth.push({
-                id: i,
-                nombre: `Bendición del Cóndor Místico ${i}`,
-                costoPoder: i,
-                multClick: 1 + (i * 0.5),
-                multPps: 1 + (i * 0.1),
-                comprado: false
-            });
-        }
+    var bt = document.getElementById("contenedor-tienda"), br = document.getElementById("contenedor-rebirth"), bd = document.getElementById("contenedor-defensas");
 
-        // Cuartel de Palomas Defensoras
-        const nombresDefensas = ["Paloma Vigilante", "Paloma Escudo", "Paloma Espía", "Paloma de Asalto", "General Palomino"];
-        for (let i = 0; i < nombresDefensas.length; i++) {
-            tiendaDefensas.push({
-                id: i,
-                nombre: nombresDefensas[i],
-                costo: Math.floor(500 * Math.pow(3.5, i)),
-                poder: Math.floor(10 * Math.pow(2.8, i)),
-                cantidad: 0
-            });
-        }
-
-        renderizarTiendas();
-        programarEventos();
-        actualizarPantalla();
-    }
-
-    // 2. Renderizado de Elementos en el DOM
-    function renderizarTiendas() {
-        // Renderizar Mercado Peruano
-        const contTienda = document.getElementById('contenedor-tienda');
+    // Inicializar Mercado Peruano
+    for(var i=1; i<=100; i++){
+        var n1 = pMeme[i%pMeme.length] + " " + sMeme[(i*3)%sMeme.length] + " #" + i;
+        var p1 = Math.floor(15 * Math.pow(1.26, i));
+        var b1 = Math.floor(1 * Math.pow(1.22, i)) + i; 
+        tiendaObjetos.push({id: i, nombre: n1, precioBase: p1, precio: p1, beneficio: b1, cantidad: 0});
 Usa el código con precaución.
-contTienda.innerHTML = tiendaObjetos.map(obj => <div class="fila-item" id="item-tienda-${obj.id}"> <div class="info"> <strong>${obj.nombre}</strong> Costo: <span class="costo-txt">${obj.costo}</span> palomas | +${obj.pps} PPS </div> <button onclick="comprarObjeto(${obj.id})" id="btn-tienda-${obj.id}">Comprar (<span class="cant-txt">0</span>)</button> </div>).join('');
-// Renderizar Tienda Ancestral
-const contRebirth = document.getElementById('contenedor-rebirth');
-contRebirth.innerHTML = tiendaRebirth.map(mejora => <div class="fila-item fila-rebirth" id="item-rebirth-${mejora.id}"> <div class="info"> <strong>${mejora.nombre}</strong> Costo: ${mejora.costoPoder} Poder Espiritual | +${(mejora.multClick - 1)*100}% Click / +${((mejora.multPps - 1)*100).toFixed(0)}% PPS </div> <button onclick="comprarMejoraAncestral(${mejora.id})" id="btn-rebirth-${mejora.id}">Adquirir</button> </div>).join('');
-// Renderizar Cuartel de Defensas
-const contDefensas = document.getElementById('contenedor-defensas');
-contDefensas.innerHTML = tiendaDefensas.map(def => <div class="fila-item fila-defensas" id="item-defensa-${def.id}"> <div class="info"> <strong>${def.nombre}</strong> Costo: <span class="costo-def-txt">${def.costo}</span> palomas | Poder: ${def.poder} </div> <button onclick="comprarDefensa(${def.id})" id="btn-defensa-${def.id}">Reclutar (<span class="cant-def-txt">0</span>)</button> </div>).join('');
+
 }
-// 3. Controladores de Pestañas
-window.cambiarP = function(pestaña) {
-document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-if(pestaña === 'juego') {
-document.getElementById('b-juego').classList.add('active');
+// Inicializar Tienda Ancestral
+for(var i=1; i<=100; i++){
+var n2 = pRebirth[i%pRebirth.length] + " " + sRebirth[(i*2)%sRebirth.length] + " #" + i;
+var p2 = Math.floor(1 * Math.pow(1.15, i));
+var b2 = 0.1 * i;
+tiendaRebirth.push({id: i, nombre: n2, costoPoder: p2, beneficioMult: b2, cantidad: 0});
+}
+// Inicializar Categorías de Palomas Defensoras
+tiendaDefensas = [
+{nombre: "Paloma Concripto (Navajera)", precio: 100, poder: 1, cantidad: 0},
+{nombre: "Paloma Comando de Choque", precio: 800, poder: 5, cantidad: 0},
+{nombre: "Paloma Tiradora Especializada", precio: 4500, poder: 25, cantidad: 0},
+{nombre: "Paloma Guardiana Sagrada del Inca", precio: 25000, poder: 150, cantidad: 0}
+];
+function renderizarTiendas() {
+var htmlTienda = "";
+tiendaObjetos.forEach((obj, index) => {
+htmlTienda += <div class="fila-item"> <div class="info"><strong>${obj.nombre}</strong>S/. ${Math.floor(obj.precio).toLocaleString()} | +${obj.beneficio.toLocaleString()} PPS (${obj.cantidad})</div> <button id="btn-tienda-${index}" onclick="comprarObjeto(${index})">Comprar</button> </div>;
+});
+bt.innerHTML = htmlTienda;
+var htmlRebirth = "";
+tiendaRebirth.forEach((obj, index) => {
+htmlRebirth += <div class="fila-item fila-rebirth"> <div class="info"><strong style="color:#8a2be2;">${obj.nombre}</strong>${obj.costoPoder} PE | +${(obj.beneficioMult*100).toFixed(1)}% Multiplicador (${obj.cantidad})</div> <button id="btn-rebirth-${index}" onclick="comprarMejoraAncestral(${index})">Adquirir</button> </div>;
+});
+br.innerHTML = htmlRebirth;
+var htmlDefensas = "";
+tiendaDefensas.forEach((def, index) => {
+htmlDefensas += <div class="fila-item fila-defensas"> <div class="info"><strong>${def.nombre}</strong>Costo: S/. ${def.precio.toLocaleString()} Palomas | Daño Base: ${def.poder} (${def.cantidad})</div> <button id="btn-defensa-${index}" onclick="comprarDefensa(${index})">Reclutar</button> </div>;
+});
+bd.innerHTML = htmlDefensas;
+}
+function cambiarP(pestaña) {
+document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+if(pestaña === 'juego'){
 document.getElementById('pestaña-juego').classList.add('active');
+document.getElementById('b-juego').classList.add('active');
 } else {
-document.getElementById('tab-deudas-btn').classList.add('active');
 document.getElementById('pestaña-deudas').classList.add('active');
+document.getElementById('tab-deudas-btn').classList.add('active');
 }
 }
-// 4. Mecánicas de Producción y Clicks
-window.clickPaloma = function() {
-if (bajoEmbargo) return;
-palomas += calcularPoderClick();
-actualizarPantalla();
-};
-function calcularPoderClick() {
-let multAncestralClick = 1;
-tiendaRebirth.forEach(m => { if(m.comprado) multAncestralClick *= m.multClick; });
-return baseClick * multiplicadorRebirth * multiplicadorFrenesi * multAncestralClick;
+function clickPaloma() {
+if(bajoEmbargo) return;
+var ganancia = baseClick * multiplicadorRebirth * multiplicadorFrenesi;
+palomas += ganancia;
+actualizarUI();
 }
-function obtenerPpsBase() {
-return tiendaObjetos.reduce((total, obj) => total + (obj.cantidad * obj.pps), 0);
+function calcularPPS() {
+var ppsBase = 0;
+tiendaObjetos.forEach(obj => ppsBase += obj.cantidad * obj.beneficio);
+var ppsFinal = ppsBase * multiplicadorRebirth * multiplicadorFrenesi;
+// Penalización acumulativa por cada halcón que rompió las defensas (25% menos por castigo)
+if(castigoPPSActivo > 0) {
+var reduccion = 1 - (0.25 * castigoPPSActivo);
+if(reduccion < 0) reduccion = 0;
+ppsFinal = ppsFinal * reduccion;
 }
-function calcularTotalPps() {
-if (bajoEmbargo) return 0;
-let ppsBase = obtenerPpsBase();
-let multAncestralPps = 1;
-tiendaRebirth.forEach(m => { if(m.comprado) multAncestralPps *= m.multPps; });
-return ppsBase * multiplicadorRebirth * multiplicadorFrenesi * multAncestralPps;
+return ppsFinal;
 }
-function obtenerTotalDefensas() {
-return tiendaDefensas.reduce((total, d) => total + d.cantidad, 0);
+function calcularDefensaTotal() {
+var total = 0;
+tiendaDefensas.forEach(def => total += def.cantidad * def.poder);
+return total;
 }
-function obtenerPoderDefensaTotal() {
-return tiendaDefensas.reduce((total, d) => total + (d.cantidad * d.poder), 0);
-}
-// 5. Sistema de Tiendas
-window.comprarObjeto = function(id) {
-let obj = tiendaObjetos.find(o => o.id === id);
-if (palomas >= obj.costo) {
-palomas -= obj.costo;
+function comprarObjeto(index) {
+var obj = tiendaObjetos[index];
+if(palomas >= obj.precio && !bajoEmbargo) {
+palomas -= obj.precio;
 obj.cantidad++;
-obj.costo = Math.floor(obj.costoBase * Math.pow(1.28, obj.cantidad));
-actualizarPantalla();
-let fila = document.getElementById(item-tienda-${id});
-fila.querySelector('.costo-txt').innerText = obj.costo.toLocaleString();
-fila.querySelector('.cant-txt').innerText = obj.cantidad;
+obj.precio = Math.floor(obj.precio * 1.3);
+actualizarUI();
+renderizarTiendas();
 }
-};
-window.comprarDefensa = function(id) {
-let def = tiendaDefensas.find(d => d.id === id);
-if (palomas >= def.costo) {
-palomas -= def.costo;
+}
+function comprarDefensa(index) {
+var def = tiendaDefensas[index];
+if(palomas >= def.precio && !bajoEmbargo) {
+palomas -= def.precio;
 def.cantidad++;
-def.costo = Math.floor(def.costo * 1.5);
-actualizarPantalla();
-let fila = document.getElementById(item-defensa-${id});
-fila.querySelector('.costo-def-txt').innerText = def.costo.toLocaleString();
-fila.querySelector('.cant-def-txt').innerText = def.cantidad;
+def.precio = Math.floor(def.precio * 1.35);
+actualizarUI();
+renderizarTiendas();
 }
-};
-window.comprarMejoraAncestral = function(id) {
-let mejora = tiendaRebirth.find(m => m.id === id);
-if (poderEspiritual >= mejora.costoPoder && !mejora.comprado) {
-poderEspiritual -= mejora.costoPoder;
-mejora.comprado = true;
-actualizarPantalla();
-let btn = document.getElementById(btn-rebirth-${id});
-btn.innerText = "Adquirido";
-btn.disabled = true;
 }
-};
-// 6. Rebirth
-window.hacerRebirth = function() {
-if (palomas >= costoRebirthActual) {
+function comprarMejoraAncestral(index) {
+var obj = tiendaRebirth[index];
+if(poderEspiritual >= obj.costoPoder && !bajoEmbargo) {
+poderEspiritual -= obj.costoPoder;
+obj.cantidad++;
+multiplicadorRebirth += obj.beneficioMult;
+obj.costoPoder = Math.floor(obj.costoPoder * 1.5) + 1;
+actualizarUI();
+renderizarTiendas();
+}
+}
+function hacerRebirth() {
+if(palomas >= costoRebirthActual && !bajoEmbargo) {
+palomas = 0;
 totalRebirths++;
 poderEspiritual += 1;
-multiplicadorRebirth = 1.0 + (totalRebirths * 0.5);
-palomas = 0;
-tiendaObjetos.forEach(obj => {
-obj.cantidad = 0;
-obj.costo = obj.costoBase;
-});
-costoRebirthActual = Math.floor(costoRebirthBase * Math.pow(1.8, totalRebirths));
+multiplicadorRebirth += 0.5;
+costoRebirthActual = Math.floor(costoRebirthBase * Math.pow(4.5, totalRebirths));
+tiendaObjetos.forEach(obj => { obj.cantidad = 0; obj.precio = obj.precioBase; });
+tiendaDefensas.forEach(def => { def.cantidad = 0; }); // Resetea soldados
+listaDeudas = [];
+bajoEmbargo = false;
+castigoPPSActivo = 0;
+ocultarPanelCartel();
+actualizarDeudasUI();
+actualizarUI();
 renderizarTiendas();
-actualizarPantalla();
-}
-};
-// 7. Gestión de Recibos y Embargos
-function generarReciboMensual() {
-let pps = obtenerPpsBase();
-if (pps <= 0) return;
-let montoDeuda = Math.floor(pps * 12 + 50);
-let nuevaDeuda = {
-id: Date.now(),
-concepto: Arbitrio y Licencia N° ${listaDeudas.length + 1},
-monto: montoDeuda,
-tiempoRestante: 25,
-critica: false
-};
-listaDeudas.push(nuevaDeuda);
-actualizarDeudasDOM();
-}
-window.pagarDeuda = function(id) {
-let deuda = listaDeudas.find(d => d.id === id);
-if (deuda && palomas >= deuda.monto) {
-palomas -= deuda.monto;
-listaDeudas = listaDeudas.filter(d => d.id !== id);
-verificarEmbargos();
-actualizarDeudasDOM();
-actualizarPantalla();
-}
-};
-function procesarDeudasTiempo() {
-let hayCriticas = false;
-listaDeudas.forEach(deuda => {
-deuda.tiempoRestante--;
-if (deuda.tiempoRestante <= 10) {
-deuda.critica = true;
-hayCriticas = true;
-}
-if (deuda.tiempoRestante <= 0) {
-bajoEmbargo = true;
-}
-});
-if (listaDeudas.length === 0) bajoEmbargo = false;
-actualizarAlertaGlobal(hayCriticas);
-actualizarDeudasDOM();
-}
-function verificarEmbargos() {
-bajoEmbargo = listaDeudas.some(d => d.tiempoRestante <= 0);
-actualizarAlertaGlobal(listaDeudas.some(d => d.tiempoRestante <= 10));
-}
-function actualizarAlertaGlobal(hayCriticas) {
-const alerta = document.getElementById('alerta-deuda-global');
-if (bajoEmbargo) {
-alerta.style.display = 'block';
-alerta.className = "alerta-deuda alerta-critica";
-alerta.innerText = "⚠️ ¡EMBARGO COACTIVO! Producción congelada por la SUNAT. Paga los recibos vencidos.";
-} else if (hayCriticas) {
-alerta.style.display = 'block';
-alerta.className = "alerta-deuda alerta-critica";
-alerta.innerText = "⚠️ ¡ADVERTENCIA! Recibos a punto de vencer. Evita el embargo total.";
-} else if (listaDeudas.length > 0) {
-alerta.style.display = 'block';
-alerta.className = "alerta-deuda";
-alerta.innerText = Tienes ${listaDeudas.length} recibo(s) pendiente(s) de pago en la pestaña de Recibos.;
-} else {
-alerta.style.display = 'none';
 }
 }
-function actualizarDeudasDOM() {
-document.getElementById('tab-deudas-btn').innerText = 💸 Recibos (${listaDeudas.length});
-const contDeudas = document.getElementById('contenedor-deudas');
-if(listaDeudas.length === 0) {
-contDeudas.innerHTML = <p style="padding:15px; color:#666; font-size:13px;">Al día con tus obligaciones del mes.</p>;
-return;
-}
-contDeudas.innerHTML = listaDeudas.map(d => <div class="fila-item ${d.critica ? 'alerta-critica' : ''}" style="border-left:5px solid #856404"> <div class="info"> <strong>${d.concepto}</strong> Monto: ${d.monto.toLocaleString()} Palomas | Vence en: ${d.tiempoRestante}s </div> <button onclick="pagarDeuda(${d.id})" style="background:linear-gradient(135deg,#856404,#a07806); color:white; border:1px solid #543f02">Pagar Recibo</button> </div>).join('');
-}
-// 8. Eventos Aleatorios y Loops
-function programarEventos() {
-setInterval(() => {
-palomas += calcularTotalPps();
-procesarDeudasTiempo();
-procesarLogicaCartel();
-actualizarPantalla();
-}, 1000);
-setInterval(generarReciboMensual, 35000);
-setInterval(() => {
-if (Math.random() > 0.4 && !cartelAtacando) {
-mostrarPalomaDorada();
-}
-}, 25000);
-setInterval(() => {
-if (!cartelActivo && !cartelAtacando) {
-lanzarAlertaCartel();
-}
-}, 60000);
-}
-function mostrarPalomaDorada() {
-const pd = document.getElementById('paloma-dorada');
-const x = Math.random() * (window.innerWidth - 80);
-const y = Math.random() * (window.innerHeight - 80);
-pd.style.left = ${x}px;
-pd.style.top = ${y}px;
-pd.style.display = 'block';
-setTimeout(() => { pd.style.display = 'none'; }, 7000);
-}
-window.clickPalomaDorada = function() {
-const pd = document.getElementById('paloma-dorada');
-pd.style.display = 'none';
-frenesiActivo = true;
-multiplicadorFrenesi = 7;
-const popup = document.createElement('div');
-popup.className = 'texto-dorado-popup';
-popup.innerHTML = '✨ ¡FRENESÍ DE LA PALOMA DORADA! ✨
-Producción y Clicks multiplicados x7 por 12s';
-document.body.appendChild(popup);
-setTimeout(() => {
-frenesiActivo = false;
-multiplicadorFrenesi = 1;
-popup.remove();
-actualizarPantalla();
-}, 12000);
-actualizarPantalla();
-};
-// 9. Lógica de Invasiones
-function lanzarAlertaCartel() {
+/* SISTEMA DE INVASIÓN DEL CARTEL DE LOS HALCONES */
+function lanzarInvasionCartel() {
+if(cartelActivo || calcularPPS() <= 0) return;
 cartelActivo = true;
 cartelAtacando = false;
 cartelTiempoLlegada = 20;
-let oleada = totalRebirths + 1;
-cartelVidaTotal = 120 * oleada * Math.pow(1.3, oleada);
+// La vida del Cartel escala dinámicamente con tu producción o reencarnaciones
+cartelVidaTotal = Math.floor(5 + (calcularPPS() * 1.5) + (totalRebirths * 300));
 cartelVidaActual = cartelVidaTotal;
-document.getElementById('guerra-panel').style.display = 'block';
-document.getElementById('guerra-desc').innerText = Una escuadra del Cartel se aproxima. Vida: ${Math.floor(cartelVidaTotal)} HP. ¡Consigue Defensas!;
-actualizarPanelCartel();
+document.getElementById("guerra-panel").style.display = "block";
+actualizarCartelUI();
 }
-function procesarLogicaCartel() {
-if (!cartelActivo) return;
-if (!cartelAtacando) {
-cartelTiempoLlegada--;
-document.getElementById('guerra-timer').innerText = Invasión en: ${cartelTiempoLlegada}s;
-if (cartelTiempoLlegada <= 0) {
-cartelAtacando = true;
-document.getElementById('guerra-desc').innerText = 💥 ¡EL CARTEL ESTÁ ATACANDO! Combate en curso...;
-document.getElementById('guerra-timer').innerText = ¡EN COMBATE!;
-}
+function actualizarCartelUI() {
+var timerTxt = document.getElementById("guerra-timer");
+var descTxt = document.getElementById("guerra-desc");
+var barra = document.getElementById("guerra-vida-bar");
+var porc = (cartelVidaActual / cartelVidaTotal) * 100;
+barra.style.width = porc + "%";
+if(!cartelAtacando) {
+timerTxt.innerText = Llegada en: ${cartelTiempoLlegada}s;
+descTxt.innerText = Halcones marchando. Vida de invasión: ${Math.floor(cartelVidaActual)} HP. Tu Fuerza Defensora: ${calcularDefensaTotal()};
 } else {
-let defensaTotal = obtenerPoderDefensaTotal();
-if (defensaTotal <= 0) {
-let robo = Math.floor(palomas * 0.15) + 50;
-palomas = Math.max(0, palomas - robo);
-document.getElementById('guerra-desc').innerText = 🦅 ¡Sin defensas! Los halcones te roban (-${robo} palomas).;
-} else {
-cartelVidaActual -= defensaTotal;
+timerTxt.innerText = 🔴 ¡EN COMBATE!;
+descTxt.innerText = ¡Asalto activo! Defensa aliada: -${calcularDefensaTotal()} HP/s. Salud enemiga restante: ${Math.floor(cartelVidaActual)} HP;
 }
-actualizarPanelCartel();
-if (cartelVidaActual <= 0) {
+}
+function ocultarPanelCartel() {
 cartelActivo = false;
 cartelAtacando = false;
-document.getElementById('guerra-panel').style.display = 'none';
-let premio = Math.floor(costoRebirthActual * 0.1) + 500;
-palomas += premio;
-alert(🎉 ¡Victoria! Defensas victoriosas. Botín recuperado: +${premio.toLocaleString()} palomas.);
-actualizarPantalla();
+document.getElementById("guerra-panel").style.display = "none";
+}
+// Loop del Combate Militar / Tiempos (1 segundo)
+setInterval(function() {
+if(cartelActivo) {
+if(!cartelAtacando) {
+cartelTiempoLlegada--;
+if(cartelTiempoLlegada <= 0) {
+cartelAtacando = true;
+}
+} else {
+// Modo combate: Tus palomas infligen daño por segundo según tu poder defensivo total
+var dmg = calcularDefensaTotal();
+if(dmg <= 0) dmg = 0.5; // Mínimo daño si no tienes nada reclutado
+cartelVidaActual -= dmg;
+if(cartelVidaActual <= 0) {
+cartelVidaActual = 0;
+ocultarPanelCartel();
+// Recompensa por defender con éxito la patria
+var recompensa = Math.floor(costoRebirthActual * 0.08 + 100);
+palomas += recompensa;
+alert(¡Victoria! Tus Palomas Defensoras repelieron al Cartel de los Halcones. Recuperas suministros (S/. ${recompensa.toLocaleString()}).);
 }
 }
+actualizarCartelUI();
 }
-function actualizarPanelCartel() {
-let porcentaje = Math.max(0, (cartelVidaActual / cartelVidaTotal) * 100);
-document.getElementById('guerra-vida-bar').style.width = ${porcentaje}%;
+}, 1000);
+// Sistema de Castigo si llegan a tu base y tu poder militar es nulo o inferior
+setInterval(function() {
+if(cartelActivo && cartelAtacando && cartelVidaActual > 0) {
+// Cada 4 segundos que pasen asediando la base sin ser derrotados, se roban o destruyen un 25% de PPS permanente hasta el Rebirth
+if(Math.random() < 0.25) {
+castigoPPSActivo++;
+actualizarUI();
+var popup = document.createElement("div");
+popup.className = "texto-dorado-popup";
+popup.style.background = "rgba(200, 0, 0, 0.95)";
+popup.style.color = "#fff";
+popup.style.border = "3px solid #721c24";
+popup.innerText = 🚨 ¡El Cartel vulneró tu base! Pierdes un 25% de tus PPS.;
+document.body.appendChild(popup);
+setTimeout(() => popup.remove(), 3000);
 }
-// 10. Interfaz Gráfica
-function actualizarPantalla() {
-let pps = calcularTotalPps();
-document.getElementById('contador').innerText = ${Math.floor(palomas).toLocaleString()} Palomas;
-document.getElementById('pps-txt').innerText = pps.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1});
-document.getElementById('mult-txt').innerText = x${multiplicadorRebirth.toFixed(1)} ${frenesiActivo ? '🔥(x7)' : ''};
-document.getElementById('defensas-txt').innerText = obtenerTotalDefensas();
-document.getElementById('poder-txt').innerText = poderEspiritual;
-document.getElementById('costo-rebirth-txt').innerText = costoRebirthActual.toLocaleString();
-document.getElementById('btn-main-rebirth').disabled = (palomas < costoRebirthActual);
-tiendaObjetos.forEach(obj => {
-let btn = document.getElementById(btn-tienda-${obj.id});
-if(btn) btn.disabled = (palomas < obj.costo);
+}
+}, 4000);
+// Intentar disparar invasiones aleatorias cada 40 segundos
+setInterval(function() {
+if(Math.random() < 0.35) {
+lanzarInvasionCartel();
+}
+}, 40000);
+/* SISTEMA DE DEUDAS (BILLS MUST BE PAID) */
+function generarDeuda() {
+var tipo = tDeuda[Math.floor(Math.random() * tDeuda.length)];
+var cobrador = cDeuda[Math.floor(Math.random() * cDeuda.length)];
+var multiplicadorDificultad = Math.max(1, totalRebirths * 3);
+var monto = Math.floor((calcularPPS() * 12) + (Math.random() * 400 * multiplicadorDificultad) + 150);
+listaDeudas.push({nombre: ${tipo} ${cobrador}, monto: monto, tiempo: 30, vencida: false});
+actualizarDeudasUI();
+}
+function pagarDeuda(index) {
+if(palomas >= listaDeudas[index].monto) {
+palomas -= listaDeudas[index].monto;
+listaDeudas.splice(index, 1);
+actualizarDeudasUI();
+actualizarUI();
+}
+}
+function actualizarDeudasUI() {
+var cont = document.getElementById("contenedor-deudas");
+var tabBtn = document.getElementById("tab-deudas-btn");
+var alerta = document.getElementById("alerta-deuda-global");
+tabBtn.innerText = 💸 Recibos (${listaDeudas.length});
+if(listaDeudas.length > 0) {
+alerta.style.display = "block";
+} else {
+alerta.style.display = "none";
+bajoEmbargo = false;
+alerta.classList.remove("alerta-critica");
+}
+var html = "";
+listaDeudas.forEach((deuda, idx) => {
+var colorFila = "";
+var tagExtra = "";
+if(deuda.vencida) {
+colorFila = "background:#f8d7da; border-left:7px solid #721c24; animation: parpadeo 1.5s infinite;";
+tagExtra = "
+⚠️ MORA: +1.5% acumulativo/s";
+} else if(deuda.tiempo <= 10) {
+colorFila = "background:#fff3cd; border-left:5px solid #856404;";
+}
+html += <div class="fila-item" style="${colorFila}"> <div class="info"><strong>${deuda.nombre}</strong>Monto: S/. ${Math.floor(deuda.monto).toLocaleString()} ${tagExtra}<br> ${deuda.vencida ? "<strong style='color:red;'>EMBARGADO</strong>" : "Vence en: " + deuda.tiempo + "s"}</div> <button onclick="pagarDeuda(${idx})" ${palomas < deuda.monto ? "disabled" : ""}>Liquidar</button> </div>;
 });
-tiendaDefensas.forEach(def => {
-let btn = document.getElementById(btn-defensa-${def.id});
-if(btn) btn.disabled = (palomas < def.costo);
-});
-tiendaRebirth.forEach(mejora => {
-let btn = document.getElementById(btn-rebirth-${mejora.id});
-if(btn && !mejora.comprado) {
-btn.disabled = (poderEspiritual < mejora.costoPoder);
+cont.innerHTML = html;
 }
+function actualizarUI() {
+document.getElementById("contador").innerText = Math.floor(palomas).toLocaleString() + " Palomas";
+document.getElementById("pps-txt").innerText = Math.floor(calcularPPS()).toLocaleString();
+document.getElementById("mult-txt").innerText = "x" + multiplicadorRebirth.toFixed(1);
+document.getElementById("defensas-txt").innerText = tiendaDefensas.reduce((acc, curr) => acc + curr.cantidad, 0);
+document.getElementById("poder-txt").innerText = poderEspiritual;
+document.getElementById("costo-rebirth-txt").innerText = costoRebirthActual.toLocaleString();
+document.getElementById("btn-main-rebirth").disabled = palomas < costoRebirthActual || bajoEmbargo;
+tiendaObjetos.forEach((obj, idx) => {
+var btn = document.getElementById(btn-tienda-${idx});
+if(btn) btn.disabled = palomas < obj.precio || bajoEmbargo;
+});
+tiendaDefensas.forEach((def, idx) => {
+var btn = document.getElementById(btn-defensa-${idx});
+if(btn) btn.disabled = palomas < def.precio || bajoEmbargo;
+});
+tiendaRebirth.forEach((obj, idx) => {
+var btn = document.getElementById(btn-rebirth-${idx});
+if(btn) btn.disabled = poderEspiritual < obj.costoPoder || bajoEmbargo;
 });
 }
-inicializarJuego()
+// Bucle de producción activa (PPS)
+setInterval(function() {
+if (!bajoEmbargo) {
+palomas += calcularPPS() / 10;
+}
+actualizarUI();
+}, 100);
+// Sistema de Gestión de Deudas Dinámicas (Loop de 1 segundo)
+setInterval(function() {
+if(listaDeudas.length > 0) {
+var hayDeudaVencida = false, hayDeudaCritica = false;
+listaDeudas.forEach(deuda => {
+if(!deuda.vencida) {
+deuda.tiempo--;
+if(deuda.tiempo <= 0) { deuda.tiempo = 0; deuda.vencida = true; }
+if(deuda.tiempo <= 10) hayDeudaCritica = true;
+}
+if(deuda.vencida) { deuda.monto = deuda.monto * 1.015; hayDeudaVencida = true; }
+});
+bajoEmbargo = hayDeudaVencida;
+var alerta = document.getElementById("alerta-deuda-global");
+if(bajoEmbargo) {
+alerta.innerText = "🚨 ¡EMBARGO GENERAL COACTIVO! Cuentas congeladas por mora tributaria.";
+alerta.classList.add("alerta-critica");
+} else if(hayDeudaCritica) {
+alerta.innerText = "⚠️ ¡ADVERTENCIA DE CORTE! Tienes documentos fiscales por vencer.";
+alerta.classList.add("alerta-critica");
+} else {
+alerta.innerText = "📋 Tienes obligaciones y cobros pendientes en Recibos.";
+alerta.classList.remove("alerta-critica");
+}
+actualizarDeudasUI();
+}
+}, 1000);
+// Generador de deudas tributarias
+setInterval(function() {
+if(calcularPPS() > 0 && Math.random() < 0.18 && listaDeudas.length < 6) { generarDeuda(); }
+}, 4500);
+/* SISTEMA COOKIE CLICKER - PALOMA DORADA AUTOMÁTICA */
+function spawnPalomaDorada() {
+var pd = document.getElementById("paloma-dorada");
+var x = Math.random() * (window.innerWidth - 100);
+var y = Math.random() * (window.innerHeight - 100);
+pd.style.left = x + "px";
+pd.style.top = y + "px";
+pd.style.display = "block";
+// Desaparece sola a los 12 segundos si no se clica
+setTimeout(function() { pd.style.display = "none"; }, 12000);
+}
+function clickPalomaDorada() {
+document.getElementById("paloma-dorada").style.display = "none";
+frenesiActivo = true;
+multiplicadorFrenesi = 7;
+var popup = document.createElement("div");
+popup.className = "texto-dorado-popup";
+popup.innerText = "✨ ¡FRENESÍ FORTUITO! x7 Producción por 20 segundos (Guiño a Cookie Clicker) ✨";
+document.body.appendChild(popup);
+setTimeout(function() {
+frenesiActivo = false;
+multiplicadorFrenesi = 1;
+popup.remove();
+actualizarUI();
+}, 20000);
+}
+// Intervalo exacto de Cookie Clicker adaptado: Aparece garantizada cada 3 o 4 minutos (entre 180 y 240 segundos)
+function programarSiguientePalomaDorada() {
+var tiempoAleatorio = Math.floor(Math.random() * (240000 - 180000 + 1)) + 180000;
+setTimeout(function() {
+spawnPalomaDorada();
+programarSiguientePalomaDorada(); // Auto-bucle cíclico infinito
+}, tiempoAleatorio);
+}
+// Configuración Inicial
+renderizarTiendas();
+actualizarUI();
+programarSiguientePalomaDorada(); // Iniciar reloj de la paloma dorada nostálgica
