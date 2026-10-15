@@ -1,207 +1,28 @@
-<script>
-// --- 1. CACHÉ DEL DOM (Optimización de velocidad) ---
-const DOM = {
-    contador: document.getElementById('contador'),
-    pps: document.getElementById('pps-txt'),
-    mult: document.getElementById('mult-txt'),
-    defensas: document.getElementById('defensas-txt'),
-    poder: document.getElementById('poder-txt'),
-    costoRebirth: document.getElementById('costo-rebirth-txt'),
-    btnRebirth: document.getElementById('btn-main-rebirth'),
-    palomaDorada: document.getElementById('paloma-dorada'),
-    guerraPanel: document.getElementById('guerra-panel'),
-    guerraTimer: document.getElementById('guerra-timer'),
-    guerraBarra: document.getElementById('guerra-vida-bar'),
-    tabJuego: document.getElementById('pestaña-juego'),
-    tabDeudas: document.getElementById('tab-deudas-btn')
-};
+<!-- CONTADORES PRINCIPALES -->
+<div id="contador">0 Palomas</div>
+<div>PPS: <span id="pps-txt">0.0</span></div>
+<div>Multiplicador: <span id="mult-txt">x1.0</span></div>
+<div>Defensas: <span id="defensas-txt">0</span></div>
+<div>Poder Espiritual: <span id="poder-txt">0</span></div>
 
-// --- 2. ESTADO GLOBAL DEL JUEGO ---
-const JUEGO = {
-    palomas: 0,
-    pps: 0,
-    multiplicador: 1.0,
-    defensas: 0,
-    poderEspiritual: 0,
-    costoRebirth: 50000,
-    ultimaActualizacion: performance.now(),
-    maxPopups: 15,
-    popupsActivos: 0
-};
+<!-- BOTÓN PRINCIPAL DE LA PALOMA -->
+<!-- Asegúrate de añadir el atributo onclick="clickPaloma(event)" para que detecte los clics -->
+<div id="paloma-principal" onclick="clickPaloma(event)" style="cursor:pointer; font-size: 48px; user-select: none;">
+    🐦 (Haz clic aquí)
+</div>
 
-// --- 3. CONFIGURACIÓN DE LA TIENDA ---
-const TIENDA = {
-    upgrades: [
-        { id: 'u1', nombre: 'Trigo Premium', costo: 15, pps: 0.2, cantidad: 0, tipo: 'normal' },
-        { id: 'u2', nombre: 'Paloma Mensajera', costo: 100, pps: 1, cantidad: 0, tipo: 'normal' },
-        { id: 'u3', nombre: 'Nido En El Techo', costo: 1100, pps: 8, cantidad: 0, tipo: 'normal' },
-        { id: 'u4', nombre: 'Escuadrón Chala', costo: 500, pps: 0, cantidad: 0, tipo: 'defensa' } // Da defensa
-    ]
-};
+<!-- BOTÓN DE REBIRTH -->
+<button id="btn-main-rebirth">
+    Hacer Rebirth (Costo: <span id="costo-rebirth-txt">50,000</span>)
+</button>
 
-// --- 4. BUCLE DE JUEGO OPTIMIZADO (Delta Time) ---
-function buclePrincipal(tiempoActual) {
-    // Calcular el tiempo transcurrido en segundos (dt)
-    let dt = (tiempoActual - JUEGO.ultimaActualizacion) / 1000;
-    JUEGO.ultimaActualizacion = tiempoActual;
+<!-- PESTAÑAS Y PANELES (Deben existir para evitar errores) -->
+<div id="pestaña-juego"></div>
+<button id="tab-deudas-btn" onclick="cambiarP('deudas')">Ir a Deudas</button>
 
-    // Producir palomas de forma pasiva basándose en el tiempo exacto
-    if (JUEGO.pps > 0) {
-        agregarPalomas(JUEGO.pps * JUEGO.multiplicador * dt);
-    }
-
-    // Actualizar interfaz de forma reactiva y ligera
-    actualizarInterfazEstase();
-
-    requestAnimationFrame(buclePrincipal);
-}
-
-// Iniciar el bucle de renderizado de alta velocidad
-requestAnimationFrame(buclePrincipal);
-
-// --- 5. FUNCIONES CORE DEL JUEGO ---
-function agregarPalomas(cantidad) {
-    JUEGO.palomas += cantidad;
-    DOM.contador.textContent = `${Math.floor(JUEGO.palomas).toLocaleString()} Palomas`;
-}
-
-function clickPaloma(e) {
-    let ganancia = 1 * JUEGO.multiplicador;
-    agregarPalomas(ganancia);
-    crearPopupFlotante(e, `+${ganancia}`);
-}
-
-// --- 6. EVENTOS OPTIMIZADOS EN RENDER (Popups limitados) ---
-function crearPopupFlotante(e, texto) {
-    if (JUEGO.popupsActivos >= JUEGO.maxPopups) return; // Evita lag por clicks masivos
-
-    JUEGO.popupsActivos++;
-    const popup = document.createElement('div');
-    popup.className = 'click-popup';
-    popup.textContent = texto;
-    
-    // Posicionamiento relativo a la pantalla de click
-    popup.style.left = `${e.clientX}px`;
-    popup.style.top = `${e.clientY}px`;
-    
-    document.body.appendChild(popup);
-    
-    setTimeout(() => {
-        popup.remove();
-        JUEGO.popupsActivos--;
-    }, 800);
-}
-
-// --- 7. APARICIÓN DINÁMICA DE LA TIENDA (Inyección Limpia) ---
-function inicializarTienda() {
-    // Creamos los contenedores una sola vez
-    const contenedorNormal = document.createElement('div');
-    contenedorNormal.innerHTML = `<div class="seccion-titulo">🏪 Mercado de Palomas</div><div class="scroll-box" id="caja-tienda"></div>`;
-    DOM.tabJuego.appendChild(contenedorNormal);
-
-    const cajaTienda = document.getElementById('caja-tienda');
-
-    // Inyectamos de golpe usando fragmentos (Mejora el rendimiento un 200%)
-    TIENDA.upgrades.forEach(item => {
-        const fila = document.createElement('div');
-        fila.className = `fila-item ${item.tipo === 'defensa' ? 'fila-defensas' : ''}`;
-        fila.id = `fila-${item.id}`;
-        fila.innerHTML = `
-            <div class="info">
-                <strong>${item.nombre} (x<span class="cant">${item.cantidad}</span>)</strong>
-                <span>${item.pps > 0 ? `+\${item.pps} PPS` : 'Defensa Base'}</span>
-            </div>
-            <button onclick="comprarItem('${item.id}')" id="btn-${item.id}">
-                🛒 ${item.costo} Palomas
-            </button>
-        `;
-        cajaTienda.appendChild(fila);
-    });
-}
-
-function comprarItem(id) {
-    const item = TIENDA.upgrades.find(u => u.id === id);
-    if (!item || JUEGO.palomas < item.costo) return;
-
-    JUEGO.palomas -= item.costo;
-    item.cantidad++;
-    
-    // Escalar el costo de forma geométrica clásica de los clickers
-    item.costo = Math.ceil(item.costo * 1.15);
-
-    // Recalcular estadísticas globales
-    recalcularEstadisticas();
-
-    // Actualizar fila específica inmediatamente en el DOM
-    const fila = document.getElementById(`fila-${id}`);
-    fila.querySelector('.cant').textContent = item.cantidad;
-    fila.querySelector('button').innerHTML = `🛒 ${item.costo.toLocaleString()} Palomas`;
-}
-
-function recalcularEstadisticas() {
-    let totalPPS = 0;
-    let totalDefensas = 0;
-
-    TIENDA.upgrades.forEach(item => {
-        if (item.tipo === 'normal') totalPPS += item.pps * item.cantidad;
-        if (item.tipo === 'defensa') totalDefensas += item.cantidad;
-    });
-
-    JUEGO.pps = totalPPS;
-    JUEGO.defensas = totalDefensas;
-
-    DOM.pps.textContent = JUEGO.pps.toFixed(1);
-    DOM.defensas.textContent = JUEGO.defensas;
-}
-
-// --- 8. CONTROL DE INTERFAZ LIGERO ---
-function actualizarInterfazEstase() {
-    // Comprobar estado de los botones de la tienda
-    TIENDA.upgrades.forEach(item => {
-        const btn = document.getElementById(`btn-${item.id}`);
-        if (btn) btn.disabled = JUEGO.palomas < item.costo;
-    });
-
-    // Activar/desactivar botón de Rebirth
-    DOM.btnRebirth.disabled = JUEGO.palomas < JUEGO.costoRebirth;
-}
-
-function hacerRebirth() {
-    if (JUEGO.palomas < JUEGO.costoRebirth) return;
-
-    JUEGO.multiplicador += 0.5;
-    JUEGO.palomas = 0;
-    JUEGO.costoRebirth = Math.ceil(JUEGO.costoRebirth * 2.5);
-
-    // Resetear cantidades de la tienda
-    TIENDA.upgrades.forEach(item => {
-        item.cantidad = 0;
-        if(item.id === 'u1') item.costo = 15;
-        if(item.id === 'u2') item.costo = 100;
-        if(item.id === 'u3') item.costo = 1100;
-        if(item.id === 'u4') item.costo = 500;
-    });
-
-    recalcularEstadisticas();
-    
-    // Forzar actualización visual
-    DOM.mult.textContent = `x${JUEGO.multiplicador.toFixed(1)}`;
-    DOM.costoRebirth.textContent = JUEGO.costoRebirth.toLocaleString();
-    
-    // Re-renderizar textos de los botones actualizados
-    TIENDA.upgrades.forEach(item => {
-        const fila = document.getElementById(`fila-${item.id}`);
-        fila.querySelector('.cant').textContent = 0;
-        fila.querySelector('button').innerHTML = `🛒 ${item.costo} Palomas`;
-    });
-}
-
-// --- 9. EVENTOS ADICIONALES (Control de Pestañas) ---
-function cambiarP(pestana) {
-    // Lógica simple para cambiar de menú
-    alert(`Cambiando a pestaña: ${pestana}. ¡Listo para conectar con tu backend/lógica de deudas!`);
-}
-
-// Inicializar la tienda de inmediato al cargar la página
-inicializarTienda();
-</script>
+<!-- ELEMENTOS DE GUERRA (Opcionales, pero declarados en tu JS) -->
+<div id="guerra-panel" style="display:none;">
+    <span id="guerra-timer">0</span>
+    <div id="guerra-vida-bar"></div>
+</div>
+<div id="paloma-dorada" style="display:none;"></div>
