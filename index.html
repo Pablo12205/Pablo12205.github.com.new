@@ -1,28 +1,56 @@
-<!-- CONTADORES PRINCIPALES -->
-<div id="contador">0 Palomas</div>
-<div>PPS: <span id="pps-txt">0.0</span></div>
-<div>Multiplicador: <span id="mult-txt">x1.0</span></div>
-<div>Defensas: <span id="defensas-txt">0</span></div>
-<div>Poder Espiritual: <span id="poder-txt">0</span></div>
+<div class="game-container">
+    <!-- PANEL DE CONTADORES (GRID DE RENDIMIENTO ALTO) -->
+    <div class="stats-grid">
+        <div class="stat-card main-stat">
+            <div id="contador">0 Palomas</div>
+            <div class="stat-sub">Multiplicador: <span id="mult-txt">x1.0</span></div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">⚡</span>
+            <div class="stat-val" id="pps-txt">0.0</div>
+            <div class="stat-lbl">PPS</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">🛡️</span>
+            <div class="stat-val" id="defensas-txt">0</div>
+            <div class="stat-lbl">Defensas</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">✨</span>
+            <div class="stat-val" id="poder-txt">0</div>
+            <div class="stat-lbl">Poder Espiritual</div>
+        </div>
+    </div>
 
-<!-- BOTÓN PRINCIPAL DE LA PALOMA -->
-<!-- Asegúrate de añadir el atributo onclick="clickPaloma(event)" para que detecte los clics -->
-<div id="paloma-principal" onclick="clickPaloma(event)" style="cursor:pointer; font-size: 48px; user-select: none;">
-    🐦 (Haz clic aquí)
+    <!-- ÁREA CENTRAL DE JUEGO -->
+    <div class="click-zone">
+        <!-- BOTÓN PRINCIPAL DE LA PALOMA -->
+        <div id="paloma-principal" onclick="clickPaloma(event)">
+            <span class="pigeon-emoji">🐦</span>
+        </div>
+    </div>
+
+    <!-- PANEL DE ACCIONES Y MEJORAS -->
+    <div class="action-panel">
+        <button id="btn-main-rebirth" class="btn btn-rebirth">
+            ✨ Hacer Rebirth <br>
+            <small>(Costo: <span id="costo-rebirth-txt">50,000</span>)</small>
+        </button>
+        
+        <button id="tab-deudas-btn" class="btn btn-nav" onclick="cambiarP('deudas')">
+            ⚖️ Ir a Deudas
+        </button>
+    </div>
+
+    <!-- PESTAÑAS Y PANELES OCULTOS POR DEFECTO -->
+    <div id="pestaña-juego"></div>
+    
+    <div id="guerra-panel" class="war-panel" style="display:none;">
+        <div class="war-header">⚠️ ¡GUERRA EN CURSO! <span id="guerra-timer">0</span>s</div>
+        <div class="progress-bar-bg">
+            <div id="guerra-vida-bar" class="progress-bar-fill"></div>
+        </div>
+    </div>
+    
+    <div id="paloma-dorada" class="golden-pigeon" style="display:none;">⭐🐦⭐</div>
 </div>
-
-<!-- BOTÓN DE REBIRTH -->
-<button id="btn-main-rebirth">
-    Hacer Rebirth (Costo: <span id="costo-rebirth-txt">50,000</span>)
-</button>
-
-<!-- PESTAÑAS Y PANELES (Deben existir para evitar errores) -->
-<div id="pestaña-juego"></div>
-<button id="tab-deudas-btn" onclick="cambiarP('deudas')">Ir a Deudas</button>
-
-<!-- ELEMENTOS DE GUERRA (Opcionales, pero declarados en tu JS) -->
-<div id="guerra-panel" style="display:none;">
-    <span id="guerra-timer">0</span>
-    <div id="guerra-vida-bar"></div>
-</div>
-<div id="paloma-dorada" style="display:none;"></div>
