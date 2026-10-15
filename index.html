@@ -3,523 +3,561 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pigeon Clicker Ultimate</title>
+    <title>Perú Clicker - Premium Edition</title>
     <style>
         :root {
-            --bg-dark: #0f172a;
-            --bg-card: #1e293b;
-            --bg-hover: #334155;
-            --accent: #38bdf8;
-            --accent-gold: #fbbf24;
-            --accent-red: #ef4444;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --radius: 16px;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            user-select: none;
+            --peru-red: #D91414;
+            --peru-white: #FFFFFF;
+            --dark-bg: #121212;
+            --panel-bg: #1E1E1E;
+            --accent-gold: #FFD700;
+            --text-color: #E0E0E0;
         }
 
         body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--dark-bg);
+            color: var(--text-color);
+            margin: 0;
             padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            user-select: none;
         }
 
-        .game-layout {
-            display: grid;
-            grid-template-columns: 1fr 350px;
-            gap: 24px;
-            width: 100%;
-            max-width: 1100px;
-            height: 85vh;
+        h1 {
+            color: var(--peru-red);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            font-style: italic;
+            color: #888;
+            margin-bottom: 20px;
         }
 
         .game-container {
-            background: linear-gradient(145deg, #1e293b, #0f172a);
-            border-radius: var(--radius);
-            padding: 24px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            position: relative;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-
-        /* GRID DE ESTADÍSTICAS */
-        .stats-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-        }
-
-        .stat-card {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            padding: 16px;
-            border-radius: var(--radius);
-            text-align: center;
-            transition: transform 0.2s;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-2px);
-        }
-
-        .main-stat {
-            grid-column: span 2;
-            background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(15, 23, 42, 0));
-            border-color: rgba(56, 189, 248, 0.2);
-        }
-
-        .main-stat #contador {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: var(--accent);
-        }
-
-        .stat-sub {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-top: 4px;
-        }
-
-        .stat-icon {
-            font-size: 1.2rem;
-            margin-bottom: 4px;
-            display: block;
-        }
-
-        .stat-val {
-            font-size: 1.2rem;
-            font-weight: 700;
-        }
-
-        .stat-lbl {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        /* ÁREA CENTRAL DE JUEGO */
-        .click-zone {
-            flex-grow: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-        }
-
-        #paloma-principal {
-            font-size: 7rem;
-            cursor: pointer;
-            transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
-        }
-
-        #paloma-principal:active {
-            transform: scale(0.9);
-        }
-
-        /* EFECTO DE TEXTO FLOTANTE (+1) */
-        .floating-text {
-            position: absolute;
-            color: var(--accent);
-            font-weight: bold;
-            font-size: 1.5rem;
-            pointer-events: none;
-            animation: floatUp 0.8s ease-out forwards;
-        }
-
-        @keyframes floatUp {
-            0% { transform: translateY(0) scale(1); opacity: 1; }
-            100% { transform: translateY(-100px) scale(0.8); opacity: 0; }
-        }
-
-        /* PANELES LATERALES Y DE ACCIONES */
-        .upgrades-panel {
-            background: var(--bg-card);
-            border-radius: var(--radius);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            overflow-y: auto;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .panel-title {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: var(--text-muted);
-            margin-bottom: 4px;
-        }
-
-        .upgrade-item {
-            background: rgba(255,255,255,0.02);
-            border: 1px solid rgba(255,255,255,0.05);
-            padding: 12px;
-            border-radius: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .upgrade-item:hover:not(.disabled) {
-            background: var(--bg-hover);
-        }
-
-        .upgrade-item.disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .upgrade-info p {
-            font-weight: 600;
-            font-size: 0.95rem;
-        }
-
-        .upgrade-info span {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-        }
-
-        .upgrade-cost {
-            font-weight: bold;
-            color: var(--accent-gold);
-            font-size: 0.9rem;
-        }
-
-        .action-panel {
-            display: flex;
-            gap: 12px;
-            margin-top: 16px;
-        }
-
-        .btn {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 12px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s, transform 0.1s;
-            color: #fff;
-        }
-
-        .btn-rebirth {
-            background: linear-gradient(135deg, #a855f7, #6b21a8);
-            box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
-        }
-
-        .btn-rebirth:hover { background: linear-gradient(135deg, #b55fe6, #7926be); }
-
-        .btn-nav {
-            background: #475569;
-        }
-
-        .btn-nav:hover { background: #64748b; }
-
-        /* EVENTOS DINÁMICOS */
-        .war-panel {
-            position: absolute;
-            top: 90px;
-            left: 24px;
-            right: 24px;
-            background: linear-gradient(135deg, #b91c1c, #7f1d1d);
-            padding: 12px 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
-            animation: pulse 2s infinite;
-        }
-
-        .war-header {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.9rem;
-            font-weight: bold;
-            margin-bottom: 6px;
-        }
-
-        .progress-bar-bg {
-            background: rgba(0,0,0,0.3);
-            height: 8px;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .progress-bar-fill {
-            background: #fff;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            max-width: 1000px;
             width: 100%;
-            height: 100%;
-            transition: width 0.1s linear;
-        }
-
-        .golden-pigeon {
-            position: absolute;
-            font-size: 2.5rem;
-            cursor: pointer;
-            animation: floatGolden 4s ease-in-out infinite;
-            z-index: 10;
-            filter: drop-shadow(0 0 10px var(--accent-gold));
-        }
-
-        @keyframes floatGolden {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(10deg); }
         }
 
         @media (max-width: 768px) {
-            .game-layout { grid-template-columns: 1fr; height: auto; }
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
-            .main-stat { grid-column: span 2; }
-            .upgrades-panel { height: 300px; }
+            .game-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background-color: var(--panel-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            border: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .click-section {
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .stats-display {
+            font-size: 24px;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+
+        .soles-text { color: #4CAF50; }
+        .palomas-text { color: #00BCD4; }
+
+        .flag-button {
+            width: 200px;
+            height: 130px;
+            background: linear-gradient(to right, var(--peru-red) 33%, var(--peru-white) 33%, var(--peru-white) 66%, var(--peru-red) 66%);
+            border: 4px solid #fff;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.5);
+            transition: transform 0.05s, box-shadow 0.1s;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .flag-button:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+
+        /* Tienda */
+        .shop-title {
+            border-bottom: 2px solid var(--peru-red);
+            padding-bottom: 5px;
+            margin-top: 0;
+        }
+
+        .shop-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #2a2a2a;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border-left: 4px solid var(--peru-red);
+        }
+
+        .shop-item-info h4 {
+            margin: 0 0 5px 0;
+        }
+
+        .shop-item-info p {
+            margin: 0;
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        .buy-btn {
+            background-color: var(--peru-red);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        .buy-btn:hover:not(:disabled) {
+            background-color: #b00f0f;
+        }
+
+        .buy-btn:disabled {
+            background-color: #555;
+            color: #888;
+            cursor: not-allowed;
+        }
+
+        /* Eventos y Deudas */
+        .alert-box {
+            width: 100%;
+            max-width: 960px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            display: none;
+            font-weight: bold;
+            text-align: center;
+            box-sizing: border-box;
+            animation: pulse 1s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { box-shadow: 0 0 5px rgba(255,0,0,0.5); }
+            to { box-shadow: 0 0 20px rgba(255,0,0,1); }
+        }
+
+        .debt-alert {
+            background-color: #721c24;
+            color: #f8d7da;
+            border: 2px solid #f5c6cb;
+        }
+
+        .attack-alert {
+            background-color: #856404;
+            color: #fff3cd;
+            border: 2px solid #ffeeba;
+        }
+
+        .action-btn {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .pay-btn { background-color: #28a745; color: white; }
+        .defend-btn { background-color: #dc3545; color: white; animation: shake 0.2s infinite; }
+
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(0px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+        }
+
+        /* Rebirth Panel */
+        .rebirth-section {
+            grid-column: 1 / -1;
+            margin-top: 10px;
+        }
+
+        .rebirth-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .rebirth-card {
+            background: #252525;
+            border: 2px solid #444;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            transition: border-color 0.3s;
+        }
+
+        .rebirth-card.available {
+            border-color: var(--accent-gold);
+        }
+
+        /* Paloma Dorada */
+        .golden-pigeon {
+            position: fixed;
+            width: 60px;
+            height: 60px;
+            background-color: gold;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 0 15px gold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+        }
+
+        .buff-notice {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 215, 0, 0.9);
+            color: black;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            display: none;
+            z-index: 2000;
         }
     </style>
 </head>
 <body>
 
-<div class="game-layout">
-    <!-- PANEL PRINCIPAL -->
+    <h1>🇵🇪 PERÚ CLICKER 🇵🇪</h1>
+    <div class="subtitle">Evita las deudas, cría palomas y sobrevive a los Halcones</div>
+
+    <!-- Alerta de Deudas de la SUNAT -->
+    <div id="debt-panel" class="alert-box debt-alert">
+        ⚠️ ¡ALERTA DE LA SUNAT / GOTA A GOTA! Tienes una deuda pendiente de <span id="debt-amount">0</span> Soles.<br>
+        Tiempo restante para pagar antes del embargo: <span id="debt-timer">20</span>s<br>
+        <button class="action-btn pay-btn" onclick="payDebt()">Pagar Deuda Obligatoria</button>
+    </div>
+
+    <!-- Alerta de Ataque del Cartel de los Halcones -->
+    <div id="attack-panel" class="alert-box attack-alert">
+        🦅 ¡EL CARTEL DE LOS HALCONES TE ESTÁ ATACANDO! 🦅<br>
+        ¡Haz clic rápido en el escudo defensivo para repelerlos! Clicks restantes: <span id="defense-clicks">15</span><br>
+        Tiempo de defensa: <span id="attack-timer">7</span>s<br>
+        <button class="action-btn defend-btn" onclick="clickDefense()">🛡️ ¡DEFENDER IMPERIO!</button>
+    </div>
+
+    <div class="buff-notice" id="buff-display">🔥 ¡Bono Dorado Activo! (x3 Soles)</div>
+
     <div class="game-container">
-        <!-- CONTROL DE RENDIMIENTO -->
-        <div class="stats-grid">
-            <div class="stat-card main-stat">
-                <div id="contador">0 Palomas</div>
-                <div class="stat-sub">Multiplicador: <span id="mult-txt">x1.0</span></div>
+        <!-- Panel Principal de Clicker -->
+        <div class="panel click-section">
+            <div class="stats-display soles-text">💰 Soles: <span id="soles-count">0</span></div>
+            <div class="stats-display palomas-text">🕊️ Palomas: <span id="palomas-count">0</span></div>
+            
+            <div style="font-size: 14px; color: #aaa; margin-bottom: 10px;">
+                +<span id="sps-display">0</span> Soles/s | +<span id="pps-display">0</span> Palomas/s
             </div>
-            <div class="stat-card">
-                <span class="stat-icon">⚡</span>
-                <div class="stat-val" id="pps-txt">0.0</div>
-                <div class="stat-lbl">PPS</div>
-            </div>
-            <div class="stat-card">
-                <span class="stat-icon">🛡️</span>
-                <div class="stat-val" id="defensas-txt">0</div>
-                <div class="stat-lbl">Defensas</div>
-            </div>
-            <div class="stat-card">
-                <span class="stat-icon">✨</span>
-                <div class="stat-val" id="poder-txt">0</div>
-                <div class="stat-lbl">Poder</div>
-            </div>
+
+            <button class="flag-button" onclick="clickFlag()"></button>
+            <p style="font-size: 12px; color: #777;">Haz clic en la bandera para trabajar manualmente</p>
         </div>
 
-        <!-- EVENTO DE GUERRA DINÁMICO -->
-        <div id="guerra-panel" class="war-panel" style="display:none;">
-            <div class="war-header">
-                <span>⚠️ ¡GUERRA EN CURSO!</span>
-                <span id="guerra-timer">30s</span>
-            </div>
-            <div class="progress-bar-bg">
-                <div id="guerra-vida-bar" class="progress-bar-fill"></div>
-            </div>
+        <!-- Panel de la Tienda de Negocios -->
+        <div class="panel">
+            <h3 class="shop-title">🏪 Tienda de Emprendimientos</h3>
+            <div id="shop-container"></div>
         </div>
 
-        <!-- OBJETO OCULTO: PALOMA DORADA -->
-        <div id="paloma-dorada" class="golden-pigeon" style="display:none;" onclick="clickGolden()">⭐🐦⭐</div>
-
-        <!-- ÁREA DE CLIC -->
-        <div class="click-zone" id="click-zone">
-            <div id="paloma-principal" onclick="clickPaloma(event)">🐦</div>
-        </div>
-
-        <!-- ACCIONES PRINCIPALES -->
-        <div class="action-panel">
-            <button id="btn-main-rebirth" class="btn btn-rebirth" onclick="hacerRebirth()">
-                ✨ Hacer Rebirth <br>
-                <small>(Costo: <span id="costo-rebirth-txt">50,000</span>)</small>
+        <!-- Panel Variado de Rebirth -->
+        <div class="panel rebirth-section">
+            <h3 class="shop-title">🔄 Sistema de Rebirth (Costo: 10,000 Soles)</h3>
+            <p>Al hacer Rebirth, reiniciarás tus Soles y Negocios, pero conservarás tus palomas totales y desbloquearás una bendición permanente única. Rebirths actuales: <span id="rebirth-count">0</span></p>
+            <div class="rebirth-options">
+                <div class="rebirth-card" id="card-sol">
+                    <h4>☀️ Bendición del Sol</h4>
+                    <p>+50% de Soles generados (Clics y Pasivo) de forma permanente.</p>
+                    <button class="buy-btn" id="btn-rebirth-sol" onclick="triggerRebirth('sol')">Elegir y Reiniciar</button>
+                </div>
+                <div class="rebirth-card" id="card-paloma">
+                    <h4>🪶 Criadero Imperial</h4>
+                    <p>+100% de Palomas por Segundo generadas permanentemente.</p>
 Usa el código con precaución.
-⚖️ Ver Deudas
+Elegir y Reiniciar
 
 
-Nido de Producción
-Migas de Pan
-+0.2 PPS automáticos
-
-15 Palomas
-Entrenador de Palomas
-+1.0 PPS automáticos
-
-100 Palomas
-Escudo de Plumas
-Suma +1 Defensa anti-guerra
-
-500 Palomas
+🛡️ Escudo Anticrisis
+Reduce permanentemente el costo de todas las deudas futuras en un 20%.
+Elegir y Reiniciar
 
 
-// ESTADO DEL JUEGO
-let palomas = 0;
-let pps = 0.0;
-let multiplicador = 1.0;
-let defensas = 0;
-let poder = 0;
-let costoRebirth = 50000;
-// Costos iniciales de mejoras
-const costos = { migas: 15, entrenador: 100, escudo: 500 };
-// FUNCIÓN DE CLIC PRINCIPAL
-function clickPaloma(event) {
-const ganancia = 1 * multiplicador;
-palomas += ganancia;
-actualizarPantalla();
-crearEfectoFlotante(event, +${ganancia.toFixed(1)});
-// Probabilidad aleatoria de que aparezca la paloma dorada (3%)
-if (Math.random() < 0.03 && document.getElementById('paloma-dorada').style.display === 'none') {
-aparecerPalomaDorada();
+
+let stats = {
+soles: 0,
+palomas: 0,
+rebirths: 0,
+sps: 0,
+pps: 0,
+embargoed: false,
+multSoles: 1.0,
+multPalomas: 1.0,
+multDeuda: 1.0
+};
+let goldenBuffActive = false;
+const items = [
+{ id: 'mototaxi', name: 'Mototaxi de Chosicano', baseCost: 15, cost: 15, type: 'soles', yield: 0.5, count: 0 },
+{ id: 'ceviche', name: 'Puesto de Ceviche al Paso', baseCost: 100, cost: 100, type: 'soles', yield: 4, count: 0 },
+{ id: 'polleria', name: 'Pollería Imperial', baseCost: 1100, cost: 1100, type: 'soles', yield: 32, count: 0 },
+{ id: 'mina', name: 'Minera Interandina', baseCost: 12000, cost: 12000, type: 'soles', yield: 260, count: 0 },
+{ id: 'plaza', name: 'Plaza de Armas (Criadero)', baseCost: 50, cost: 50, type: 'palomas', yield: 1, count: 0 },
+{ id: 'balcon', name: 'Balcón Colonial Sanmartiniano', baseCost: 500, cost: 500, type: 'palomas', yield: 8, count: 0 }
+];
+let currentDebt = 0;
+let debtTimeLeft = 20;
+let debtInterval = null;
+let nextDebtCycle = 60;
+let defenseClicksLeft = 15;
+let attackTimeLeft = 7;
+let attackInterval = null;
+function init() {
+renderShop();
+updateUI();
+setInterval(gameLoop, 100);
+setInterval(debtTriggerLoop, 1000);
+setTimeout(spawnGoldenPigeon, 30000); // Aparece la primera paloma dorada temprano
 }
+function updateUI() {
+document.getElementById('soles-count').innerText = Math.floor(stats.soles).toLocaleString();
+document.getElementById('palomas-count').innerText = Math.floor(stats.palomas).toLocaleString();
+let realSPS = stats.sps * stats.multSoles * (goldenBuffActive ? 3 : 1);
+let realPPS = stats.pps * stats.multPalomas;
+if(stats.embargoed) {
+realSPS /= 2;
+realPPS /= 2;
 }
-// ACTUALIZAR INTERFAZ
-function actualizarPantalla() {
-document.getElementById('contador').textContent = ${Math.floor(palomas)} Palomas;
-document.getElementById('mult-txt').textContent = x${multiplicador.toFixed(1)};
-document.getElementById('pps-txt').textContent = pps.toFixed(1);
-document.getElementById('defensas-txt').textContent = defensas;
-document.getElementById('poder-txt').textContent = poder;
-document.getElementById('costo-rebirth-txt').textContent = costoRebirth.toLocaleString();
-// Bloquear/Desbloquear visualmente las mejoras según el saldo
-gestionarEstiloCompra('migas', costos.migas);
-gestionarEstiloCompra('entrenador', costos.entrenador);
-gestionarEstiloCompra('escudo', costos.escudo);
+document.getElementById('sps-display').innerText = realSPS.toFixed(1);
+document.getElementById('pps-display').innerText = realPPS.toFixed(1);
+document.getElementById('rebirth-count').innerText = stats.rebirths;
+items.forEach((item, index) => {
+const btn = document.getElementById(buy-btn-${index});
+if (btn) {
+btn.disabled = stats.soles < item.cost;
+btn.innerText = Comprar (${Math.floor(item.cost)} Soles);
 }
-function gestionarEstiloCompra(id, costo) {
-const elemento = document.getElementById(costo-${id}).parentElement;
-if (palomas >= costo) {
-elemento.classList.remove('disabled');
+const countText = document.getElementById(count-${index});
+if (countText) {
+countText.innerText = Posees: ${item.count};
+}
+});
+const canRebirth = stats.soles >= 10000;
+['sol', 'paloma', 'sunat'].forEach(id => {
+const card = document.getElementById(card-${id});
+const btn = document.getElementById(btn-rebirth-${id});
+if (canRebirth) {
+card.classList.add('available');
+btn.disabled = false;
 } else {
-elemento.classList.add('disabled');
+card.classList.remove('available');
+btn.disabled = true;
+}
+});
+}
+function renderShop() {
+const container = document.getElementById('shop-container');
+container.innerHTML = '';
+items.forEach((item, index) => {
+const div = document.createElement('div');
+div.className = 'shop-item';
+div.innerHTML = <div class="shop-item-info"> <h4>${item.name}</h4> <p>Produce: +${item.yield} ${item.type === 'soles' ? 'Soles' : 'Palomas'}/s | <span id="count-${index}">Posees: 0</span></p> </div> <button class="buy-btn" id="buy-btn-${index}" onclick="buyItem(${index})">Comprar (${item.cost} Soles)</button>;
+container.appendChild(div);
+});
+}
+function clickFlag() {
+let gain = 1 * stats.multSoles;
+if (goldenBuffActive) gain *= 3;
+stats.soles += gain;
+updateUI();
+}
+function buyItem(index) {
+let item = items[index];
+if (stats.soles >= item.cost) {
+stats.soles -= item.cost;
+item.count++;
+item.cost = item.baseCost * Math.pow(1.15, item.count);
+recalculateProduction();
+updateUI();
 }
 }
-// COMPRAR MEJORAS
-function comprarMejora(tipo) {
-if (palomas >= costos[tipo]) {
-palomas -= costos[tipo];
-if (tipo === 'migas') {
-pps += 0.2;
-costos.migas = Math.ceil(costos.migas * 1.15);
-document.getElementById('costo-migas').textContent = ${costos.migas} Palomas;
-} else if (tipo === 'entrenador') {
-pps += 1.0;
-costos.entrenador = Math.ceil(costos.entrenador * 1.15);
-document.getElementById('costo-entrenador').textContent = ${costos.entrenador} Palomas;
-} else if (tipo === 'escudo') {
-defensas += 1;
-costos.escudo = Math.ceil(costos.escudo * 1.5);
-document.getElementById('costo-escudo').textContent = ${costos.escudo} Palomas;
+function recalculateProduction() {
+stats.sps = items.filter(i => i.type === 'soles').reduce((sum, i) => sum + (i.yield * i.count), 0);
+stats.pps = items.filter(i => i.type === 'palomas').reduce((sum, i) => sum + (i.yield * i.count), 0);
 }
-actualizarPantalla();
+function gameLoop() {
+let stepSPS = stats.sps * stats.multSoles * (goldenBuffActive ? 3 : 1);
+let stepPPS = stats.pps * stats.multPalomas;
+if (stats.embargoed) {
+stepSPS /= 2;
+stepPPS /= 2;
 }
+stats.soles += stepSPS / 10;
+stats.palomas += stepPPS / 10;
+updateUI();
 }
-// MECÁNICA DE REBIRTH
-function hacerRebirth() {
-if (palomas >= costoRebirth) {
-palomas = 0;
-pps = 0;
-defensas = 0;
-multiplicador += 0.5; // El multiplicador aumenta permanentemente
-poder += 1;          // El poder espiritual sube
-costoRebirth = Math.ceil(costoRebirth * 2.5);
-// Resetear costos de nidos
-costos.migas = 15;
-costos.entrenador = 100;
-costos.escudo = 500;
-document.getElementById('costo-migas').textContent = 15 Palomas;
-document.getElementById('costo-entrenador').textContent = 100 Palomas;
-document.getElementById('costo-escudo').textContent = 500 Palomas;
-actualizarPantalla();
-alert("✨ ¡Has renacido! Tu multiplicador permanente ha aumentado.");
+function debtTriggerLoop() {
+if (currentDebt === 0 && attackInterval === null) {
+nextDebtCycle--;
+if (nextDebtCycle <= 0) {
+if (Math.random() > 0.4) {
+triggerDebtEvent();
 } else {
-alert("No tienes suficientes palomas para el Rebirth.");
+triggerAttackEvent();
+}
+nextDebtCycle = 60;
 }
 }
-// EFECTO VISUAL +1 FLOTANTE
-function crearEfectoFlotante(event, texto) {
-const zona = document.getElementById('click-zone');
-const span = document.createElement('span');
-span.className = 'floating-text';
-span.textContent = texto;
-// Calcular posición relativa al contenedor
-const rect = zona.getBoundingClientRect();
-const x = event.clientX - rect.left;
-const y = event.clientY - rect.top;
-span.style.left = ${x}px;
-span.style.top = ${y}px;
-zona.appendChild(span);
-setTimeout(() => span.remove(), 800);
 }
-// EVENTO: PALOMA DORADA ALEATORIA
-function aparecerPalomaDorada() {
-const dorada = document.getElementById('paloma-dorada');
-const zona = document.getElementById('click-zone');
-const maxX = zona.clientWidth - 80;
-const maxY = zona.clientHeight - 80;
-dorada.style.left = ${Math.random() * maxX}px;
-dorada.style.top = ${Math.random() * maxY}px;
-dorada.style.display = 'block';
-// Desaparece sola a los 5 segundos si no la clickeas
-setTimeout(() => { dorada.style.display = 'none'; }, 5000);
-}
-function clickGolden() {
-const bono = Math.max(50, palomas * 0.2); // 20% de tus palomas actuales o mínimo 50
-palomas += bono;
-document.getElementById('paloma-dorada').style.display = 'none';
-alert(⭐ ¡Paloma Dorada capturada! +${Math.floor(bono)} Palomas);
-actualizarPantalla();
-}
-// EVENTO AUTOMÁTICO: SISTEMA DE GUERRA (Cada 1 minuto, 20% probabilidad)
-setInterval(() => {
-if (Math.random() < 0.2 && document.getElementById('guerra-panel').style.display === 'none') {
-activarGuerra();
-}
-}, 60000);
-function activarGuerra() {
-const panel = document.getElementById('guerra-panel');
-const bar = document.getElementById('guerra-vida-bar');
-const timerTxt = document.getElementById('guerra-timer');
-panel.style.display = 'block';
-let tiempoRestante = 15; // 15 segundos para defenderse
-timerTxt.textContent = ${tiempoRestante}s;
-bar.style.width = '100%';
-const cuentaAtras = setInterval(() => {
-tiempoRestante--;
-timerTxt.textContent = ${tiempoRestante}s;
-bar.style.width = ${(tiempoRestante / 15) * 100}%;
-if (tiempoRestante <= 0) {
-clearInterval(cuentaAtras);
-panel.style.display = 'none';
-// Consecuencia de la guerra si no tienes defensas
-if (defensas > 0) {
-defensas--;
-alert("🛡️ ¡Tus defensas repelieron el ataque enemigo! Perdiste 1 Escudo.");
-} else {
-palomas = Math.floor(palomas * 0.5); // Pierdes la mitad
-alert("💥 Perdiste la guerra. Los enemigos se llevaron el 50% de tus palomas.");
-}
-actualizarPantalla();
+function triggerDebtEvent() {
+currentDebt = Math.floor((200 + (stats.sps * 15)) * stats.multDeuda);
+debtTimeLeft = 20;
+document.getElementById('debt-amount').innerText = currentDebt;
+document.getElementById('debt-timer').innerText = debtTimeLeft;
+document.getElementById('debt-panel').style.display = 'block';
+debtInterval = setInterval(() => {
+debtTimeLeft--;
+document.getElementById('debt-timer').innerText = debtTimeLeft;
+if (debtTimeLeft <= 0) {
+clearInterval(debtInterval);
+stats.embargoed = true;
+document.getElementById('debt-panel').innerHTML = ⚠️ ¡EMBARGADO POR LA SUNAT! Tus ganancias se reducen al 50% hasta saldar la deuda acumulada de ${currentDebt} Soles.<br><button class="action-btn pay-btn" onclick="payDebt()">Pagar Deuda y Levantar Embargo</button>;
 }
 }, 1000);
 }
-// BUCLE PRINCIPAL (PRODUCCIÓN PPS)
-setInterval(() => {
-if (pps > 0) {
-palomas += (pps / 10); // Ejecución cada 100ms para mayor fluidez
-actualizarPantalla();
+function payDebt() {
+if (stats.soles >= currentDebt) {
+stats.soles -= currentDebt;
+currentDebt = 0;
+stats.embargoed = false;
+if(debtInterval) clearInterval(debtInterval);
+document.getElementById('debt-panel').style.display = 'none';
+document.getElementById('debt-panel').innerHTML = ⚠️ ¡ALERTA DE LA SUNAT / GOTA A GOTA! Tienes una deuda pendiente de <span id="debt-amount">0</span> Soles.<br>Tiempo restante para pagar antes del embargo: <span id="debt-timer">20</span>s<br><button class="action-btn pay-btn" onclick="payDebt()">Pagar Deuda Obligatoria</button>;
+updateUI();
+} else {
+alert("¡No tienes suficientes Soles para saldar la deuda!");
 }
-}, 100);
-function alertaDeudas() {
-alert("⚖️ El sistema de gestión de deudas del banco central de palomas estará disponible en la próxima actualización de expansión comercial.");
 }
-// Inicializar
-actualizarPantalla();
+function triggerAttackEvent() {
+defenseClicksLeft = 15 + (stats.rebirths * 2);
+attackTimeLeft = 7;
+document.getElementById('defense-clicks').innerText = defenseClicksLeft;
+document.getElementById('attack-timer').innerText = attackTimeLeft;
+document.getElementById('attack-panel').style.display = 'block';
+attackInterval = setInterval(() => {
+attackTimeLeft--;
+document.getElementById('attack-timer').innerText = attackTimeLeft;
+if (attackTimeLeft <= 0) {
+clearInterval(attackInterval);
+attackInterval = null;
+document.getElementById('attack-panel').style.display = 'none';
+let stolen = Math.floor(stats.soles * 0.30);
+stats.soles -= stolen;
+alert(🚨 ¡Los Halcones rompieron tus defensas y se robaron ${stolen} Soles!);
+updateUI();
+}
+}, 1000);
+}
+function clickDefense() {
+if (attackInterval === null) return;
+defenseClicksLeft--;
+document.getElementById('defense-clicks').innerText = defenseClicksLeft;
+if (defenseClicksLeft <= 0) {
+clearInterval(attackInterval);
+attackInterval = null;
+document.getElementById('attack-panel').style.display = 'none';
+alert("🛡️ ¡Éxito! Lograste defender tu negocio y ahuyentaste al cartel de los Halcones.");
+}
+}
+function spawnGoldenPigeon() {
+const pigeon = document.createElement('div');
+pigeon.className = 'golden-pigeon';
+pigeon.innerHTML = '🕊️';
+pigeon.style.top = Math.random() * (window.innerHeight - 100) + 'px';
+pigeon.style.left = Math.random() * (window.innerWidth - 100) + 'px';
+pigeon.onclick = function() {
+pigeon.remove();
+triggerGoldenBuff();
+};
+document.body.appendChild(pigeon);
+setTimeout(() => {
+if (pigeon.parentElement) {
+pigeon.remove();
+setTimeout(spawnGoldenPigeon, Math.random() * 60000 + 180000);
+}
+}, 12000);
+}
+function triggerGoldenBuff() {
+goldenBuffActive = true;
+document.getElementById('buff-display').style.display = 'block';
+setTimeout(() => {
+goldenBuffActive = false;
+document.getElementById('buff-display').style.display = 'none';
+setTimeout(spawnGoldenPigeon, Math.random() * 60000 + 180000);
+}, 25000);
+}
+function triggerRebirth(choice) {
+if (stats.soles < 10000) return;
+if (choice === 'sol') {
+stats.multSoles += 0.50;
+alert("¡Rebirth Exitoso! Bendición del Sol obtenida (+50% Soles).");
+} else if (choice === 'paloma') {
+stats.multPalomas += 1.00;
+alert("¡Rebirth Exitoso! Criadero Imperial obtenido (+100% Palomas).");
+} else if (choice === 'sunat') {
+stats.multDeuda *= 0.80;
+alert("¡Rebirth Exitoso! Escudo Anticrisis obtenido (-20% costos de deuda).");
+}
+stats.soles = 0;
+stats.rebirths++;
+stats.sps = 0;
+stats.pps = 0;
+stats.embargoed = false;
+items.forEach(item => {
+item.count = 0;
+item.cost = item.baseCost;
+});
+if(debtInterval) clearInterval(debtInterval);
+if(attackInterval) clearInterval(attackInterval);
+currentDebt = 0;
+document.getElementById('debt-panel').style.display = 'none';
+document.getElementById('attack-panel').style.display = 'none';
+nextDebtCycle = 60;
+renderShop();
+updateUI();
+}
+window.onload = init
