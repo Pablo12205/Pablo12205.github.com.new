@@ -198,7 +198,7 @@
             50% { transform: translate(-1px, 2px) rotate(-1deg); }
         }
 
-        /* Rebirth Panel */
+        /* Rebirth Panel (Árbol de Habilidades) */
         .rebirth-section {
             grid-column: 1 / -1;
             margin-top: 10px;
@@ -279,285 +279,223 @@
     <div class="game-container">
         <!-- Panel Principal de Clicker -->
         <div class="panel click-section">
-            <div class="stats-display soles-text">💰 Soles: <span id="soles-count">0</span></div>
-            <div class="stats-display palomas-text">🕊️ Palomas: <span id="palomas-count">0</span></div>
-            
-            <div style="font-size: 14px; color: #aaa; margin-bottom: 10px;">
-                +<span id="sps-display">0</span> Soles/s | +<span id="pps-display">0</span> Palomas/s
-            </div>
-
+            <div class="stats-display">Soles: <span id="soles-count" class="soles-text">0</span></div>
+            <div class="stats-display">Palomas: <span id="palomas-count" class="palomas-text">0</span></div>
+            <p>Palomas por segundo (PPS): <span id="pps-count">0</span></p>
             <button class="flag-button" onclick="clickFlag()"></button>
-            <p style="font-size: 12px; color: #777;">Haz clic en la bandera para trabajar manualmente</p>
+            <p>Haz clic en la bandera para obtener Soles</p>
         </div>
 
-        <!-- Panel de la Tienda de Negocios -->
+        <!-- Panel de la Tienda de Objetos -->
         <div class="panel">
-            <h3 class="shop-title">🏪 Tienda de Emprendimientos</h3>
-            <div id="shop-container"></div>
+            <h3 class="shop-title">🏪 Tienda de Criaderos</h3>
+            <div id="shop-container">
+                <!-- Los objetos se cargarán dinámicamente aquí vía JS -->
+            </div>
         </div>
 
-        <!-- Panel Variado de Rebirth -->
+        <!-- Árbol de Habilidades / Mejoras Nacionales -->
         <div class="panel rebirth-section">
-            <h3 class="shop-title">🔄 Sistema de Rebirth (Costo: 10,000 Soles)</h3>
-            <p>Al hacer Rebirth, reiniciarás tus Soles y Negocios, pero conservarás tus palomas totales y desbloquearás una bendición permanente única. Rebirths actuales: <span id="rebirth-count">0</span></p>
-            <div class="rebirth-options">
-                <div class="rebirth-card" id="card-sol">
-                    <h4>☀️ Bendición del Sol</h4>
-                    <p>+50% de Soles generados (Clics y Pasivo) de forma permanente.</p>
-                    <button class="buy-btn" id="btn-rebirth-sol" onclick="triggerRebirth('sol')">Elegir y Reiniciar</button>
-                </div>
-                <div class="rebirth-card" id="card-paloma">
-                    <h4>🪶 Criadero Imperial</h4>
-                    <p>+100% de Palomas por Segundo generadas permanentemente.</p>
+            <h3 class="shop-title">🌳 Árbol de Habilidades Peruanas</h3>
+            <div class="rebirth-options" id="skills-container">
+                <!-- Las habilidades se cargarán aquí -->
+            </div>
+        </div>
+    </div>
+
+    <!-- CÓDIGO JAVASCRIPT DEL JUEGO -->
+    <script>
+        // Variables de estado del juego
+        let game = {
+            soles: 0,
+            palomas: 0,
+            pps: 0,
+            clickValue: 1,
+            multiplier: 1,
+            activeEvent: false
+        };
+
+        // Base de datos de la tienda
+        const shopItems = [
+            { id: 'nido', name: '🪹 Nido de Techo', cost: 15, pps: 0.2, count: 0 },
+            { id: 'plaza', name: '🏛️ Plaza San Martín', cost: 100, pps: 1, count: 0 },
+            { id: 'mercado', name: '🏪 Mercado Mayorista', cost: 1100, pps: 8, count: 0 },
+            { id: 'catedral', name: '⛪ Campanario Catedral', cost: 12000, pps: 47, count: 0 }
+        ];
+
 Usa el código con precaución.
-Elegir y Reiniciar
-
-
-🛡️ Escudo Anticrisis
-Reduce permanentemente el costo de todas las deudas futuras en un 20%.
-Elegir y Reiniciar
-
-
-
-let stats = {
-soles: 0,
-palomas: 0,
-rebirths: 0,
-sps: 0,
-pps: 0,
-embargoed: false,
-multSoles: 1.0,
-multPalomas: 1.0,
-multDeuda: 1.0
-};
-let goldenBuffActive = false;
-const items = [
-{ id: 'mototaxi', name: 'Mototaxi de Chosicano', baseCost: 15, cost: 15, type: 'soles', yield: 0.5, count: 0 },
-{ id: 'ceviche', name: 'Puesto de Ceviche al Paso', baseCost: 100, cost: 100, type: 'soles', yield: 4, count: 0 },
-{ id: 'polleria', name: 'Pollería Imperial', baseCost: 1100, cost: 1100, type: 'soles', yield: 32, count: 0 },
-{ id: 'mina', name: 'Minera Interandina', baseCost: 12000, cost: 12000, type: 'soles', yield: 260, count: 0 },
-{ id: 'plaza', name: 'Plaza de Armas (Criadero)', baseCost: 50, cost: 50, type: 'palomas', yield: 1, count: 0 },
-{ id: 'balcon', name: 'Balcón Colonial Sanmartiniano', baseCost: 500, cost: 500, type: 'palomas', yield: 8, count: 0 }
+// Base de datos de habilidades
+const skills = [
+{ id: 'ceviche', name: '🍋 Cevichito Energético', cost: 50, desc: 'Duplica el valor de tus clics manuales.', purchased: false },
+{ id: 'mototaxi', name: '🛺 Mototaxi Veloz', cost: 500, desc: 'Aumenta un 10% la producción total de PPS.', purchased: false },
+{ id: 'inca', name: '👑 Oro del Inca', cost: 2500, desc: 'Multiplica por x3 los soles obtenidos al hacer clic.', purchased: false }
 ];
-let currentDebt = 0;
-let debtTimeLeft = 20;
-let debtInterval = null;
-let nextDebtCycle = 60;
-let defenseClicksLeft = 15;
-let attackTimeLeft = 7;
-let attackInterval = null;
-function init() {
-renderShop();
+// Lógica de clics en la bandera
+function clickFlag() {
+if (game.activeEvent === 'attack') return; // Bloquear si te están atacando
+let gain = game.clickValue * game.multiplier;
+game.soles += gain;
 updateUI();
-setInterval(gameLoop, 100);
-setInterval(debtTriggerLoop, 1000);
-setTimeout(spawnGoldenPigeon, 30000); // Aparece la primera paloma dorada temprano
 }
-function updateUI() {
-document.getElementById('soles-count').innerText = Math.floor(stats.soles).toLocaleString();
-document.getElementById('palomas-count').innerText = Math.floor(stats.palomas).toLocaleString();
-let realSPS = stats.sps * stats.multSoles * (goldenBuffActive ? 3 : 1);
-let realPPS = stats.pps * stats.multPalomas;
-if(stats.embargoed) {
-realSPS /= 2;
-realPPS /= 2;
-}
-document.getElementById('sps-display').innerText = realSPS.toFixed(1);
-document.getElementById('pps-display').innerText = realPPS.toFixed(1);
-document.getElementById('rebirth-count').innerText = stats.rebirths;
-items.forEach((item, index) => {
-const btn = document.getElementById(buy-btn-${index});
-if (btn) {
-btn.disabled = stats.soles < item.cost;
-btn.innerText = Comprar (${Math.floor(item.cost)} Soles);
-}
-const countText = document.getElementById(count-${index});
-if (countText) {
-countText.innerText = Posees: ${item.count};
-}
-});
-const canRebirth = stats.soles >= 10000;
-['sol', 'paloma', 'sunat'].forEach(id => {
-const card = document.getElementById(card-${id});
-const btn = document.getElementById(btn-rebirth-${id});
-if (canRebirth) {
-card.classList.add('available');
-btn.disabled = false;
-} else {
-card.classList.remove('available');
-btn.disabled = true;
-}
-});
-}
-function renderShop() {
+// Cargar Tienda dinámicamente
+function loadShop() {
 const container = document.getElementById('shop-container');
 container.innerHTML = '';
-items.forEach((item, index) => {
-const div = document.createElement('div');
-div.className = 'shop-item';
-div.innerHTML = <div class="shop-item-info"> <h4>${item.name}</h4> <p>Produce: +${item.yield} ${item.type === 'soles' ? 'Soles' : 'Palomas'}/s | <span id="count-${index}">Posees: 0</span></p> </div> <button class="buy-btn" id="buy-btn-${index}" onclick="buyItem(${index})">Comprar (${item.cost} Soles)</button>;
-container.appendChild(div);
+shopItems.forEach((item, index) => {
+container.innerHTML += <div class="shop-item"> <div class="shop-item-info"> <h4>${item.name} (${item.count})</h4> <p>Produce: +${item.pps} palomas/s | Costo: ${Math.round(item.cost)} Soles</p> </div> <button class="buy-btn" id="buy-${item.id}" onclick="buyItem(${index})">Comprar</button> </div>;
 });
 }
-function clickFlag() {
-let gain = 1 * stats.multSoles;
-if (goldenBuffActive) gain *= 3;
-stats.soles += gain;
-updateUI();
+// Cargar Habilidades dinámicamente
+function loadSkills() {
+const container = document.getElementById('skills-container');
+container.innerHTML = '';
+skills.forEach((skill, index) => {
+container.innerHTML += <div class="rebirth-card ${game.soles >= skill.cost && !skill.purchased ? 'available' : ''}" id="skill-${skill.id}"> <h4>${skill.name}</h4> <p>${skill.desc}</p> <p><b>Costo: ${skill.cost} Soles</b></p> <button class="buy-btn" id="btn-skill-${skill.id}" onclick="buySkill(${index})" ${skill.purchased ? 'disabled' : ''}> ${skill.purchased ? '✓ Desbloqueada' : 'Desbloquear'} </button> </div>;
+});
 }
+// Comprar Objetos
 function buyItem(index) {
-let item = items[index];
-if (stats.soles >= item.cost) {
-stats.soles -= item.cost;
+let item = shopItems[index];
+if (game.soles >= item.cost) {
+game.soles -= item.cost;
 item.count++;
-item.cost = item.baseCost * Math.pow(1.15, item.count);
-recalculateProduction();
+item.cost *= 1.15; // Escalado de precios
+calculatePPS();
+loadShop();
 updateUI();
 }
 }
-function recalculateProduction() {
-stats.sps = items.filter(i => i.type === 'soles').reduce((sum, i) => sum + (i.yield * i.count), 0);
-stats.pps = items.filter(i => i.type === 'palomas').reduce((sum, i) => sum + (i.yield * i.count), 0);
-}
-function gameLoop() {
-let stepSPS = stats.sps * stats.multSoles * (goldenBuffActive ? 3 : 1);
-let stepPPS = stats.pps * stats.multPalomas;
-if (stats.embargoed) {
-stepSPS /= 2;
-stepPPS /= 2;
-}
-stats.soles += stepSPS / 10;
-stats.palomas += stepPPS / 10;
+// Comprar Habilidades del Árbol
+function buySkill(index) {
+let skill = skills[index];
+if (game.soles >= skill.cost && !skill.purchased) {
+game.soles -= skill.cost;
+skill.purchased = true;
+// Aplicar efectos según la habilidad adquirida
+if (skill.id === 'ceviche') game.clickValue *= 2;
+if (skill.id === 'inca') game.multiplier *= 3;
+calculatePPS();
+loadSkills();
 updateUI();
 }
-function debtTriggerLoop() {
-if (currentDebt === 0 && attackInterval === null) {
-nextDebtCycle--;
-if (nextDebtCycle <= 0) {
-if (Math.random() > 0.4) {
-triggerDebtEvent();
-} else {
-triggerAttackEvent();
 }
-nextDebtCycle = 60;
+// Calcular Palomas Por Segundo totales
+function calculatePPS() {
+let totalPPS = 0;
+shopItems.forEach(item => {
+totalPPS += item.count * item.pps;
+});
+// Si tienes la habilidad de mototaxi, aumenta un 10%
+if (skills.find(s => s.id === 'mototaxi').purchased) {
+totalPPS *= 1.10;
+}
+game.pps = totalPPS;
+}
+// Refrescar los números en pantalla
+function updateUI() {
+document.getElementById('soles-count').innerText = Math.floor(game.soles);
+document.getElementById('palomas-count').innerText = Math.floor(game.palomas);
+document.getElementById('pps-count').innerText = game.pps.toFixed(1);
+// Habilitar o deshabilitar botones de la tienda según el dinero
+shopItems.forEach((item) => {
+const btn = document.getElementById(buy-${item.id});
+if (btn) btn.disabled = game.soles < item.cost;
+});
+// Actualizar estado visual de las habilidades
+skills.forEach((skill) => {
+const btn = document.getElementById(btn-skill-${skill.id});
+const card = document.getElementById(skill-${skill.id});
+if (btn && card) {
+if (!skill.purchased) {
+btn.disabled = game.soles < skill.cost;
+if (game.soles >= skill.cost) card.classList.add('available');
+else card.classList.remove('available');
 }
 }
+});
 }
-function triggerDebtEvent() {
-currentDebt = Math.floor((200 + (stats.sps * 15)) * stats.multDeuda);
-debtTimeLeft = 20;
-document.getElementById('debt-amount').innerText = currentDebt;
-document.getElementById('debt-timer').innerText = debtTimeLeft;
+// ==========================================
+// SISTEMA PRINCIPAL DE TIEMPO (GAME LOOP)
+// ==========================================
+setInterval(function() {
+// 1. Añadir palomas automáticas por segundo
+game.palomas += game.pps;
+// 2. Producción automática de Soles pasivos basados en tus palomas criadas
+game.soles += (game.palomas * 0.1);
+updateUI();
+}, 1000);
+// ==========================================
+// EVENTOS ALEATORIOS PELIGROSOS
+// ==========================================
+let debtTime = 20;
+let debtVal = 0;
+let attackTime = 7;
+let clicksNeeded = 15;
+let eventInterval;
+function triggerRandomEvent() {
+if (game.activeEvent) return;
+let rand = Math.random();
+if (rand < 0.4) {
+// Evento 1: SUNAT reclama deudas
+game.activeEvent = 'debt';
+debtVal = Math.round(game.soles * 0.3) + 50;
+document.getElementById('debt-amount').innerText = debtVal;
 document.getElementById('debt-panel').style.display = 'block';
-debtInterval = setInterval(() => {
-debtTimeLeft--;
-document.getElementById('debt-timer').innerText = debtTimeLeft;
-if (debtTimeLeft <= 0) {
-clearInterval(debtInterval);
-stats.embargoed = true;
-document.getElementById('debt-panel').innerHTML = ⚠️ ¡EMBARGADO POR LA SUNAT! Tus ganancias se reducen al 50% hasta saldar la deuda acumulada de ${currentDebt} Soles.<br><button class="action-btn pay-btn" onclick="payDebt()">Pagar Deuda y Levantar Embargo</button>;
+debtTime = 20;
+eventInterval = setInterval(() => {
+debtTime--;
+document.getElementById('debt-timer').innerText = debtTime;
+if (debtTime <= 0) {
+// Multa por no pagar
+game.soles = Math.max(0, game.soles - (debtVal * 2));
+endEvent('debt-panel');
 }
 }, 1000);
+} else if (rand > 0.7) {
+// Evento 2: Ataque de los Halcones
+game.activeEvent = 'attack';
+clicksNeeded = 15;
+attackTime = 7;
+document.getElementById('defense-clicks').innerText = clicksNeeded;
+document.getElementById('attack-panel').style.display = 'block';
+eventInterval = setInterval(() => {
+attackTime--;
+document.getElementById('attack-timer').innerText = attackTime;
+if (attackTime <= 0) {
+// Consecuencia: Pierdes la mitad de tus palomas criadas
+game.palomas = Math.floor(game.palomas / 2);
+endEvent('attack-panel');
+}
+}, 1000);
+}
 }
 function payDebt() {
-if (stats.soles >= currentDebt) {
-stats.soles -= currentDebt;
-currentDebt = 0;
-stats.embargoed = false;
-if(debtInterval) clearInterval(debtInterval);
-document.getElementById('debt-panel').style.display = 'none';
-document.getElementById('debt-panel').innerHTML = ⚠️ ¡ALERTA DE LA SUNAT / GOTA A GOTA! Tienes una deuda pendiente de <span id="debt-amount">0</span> Soles.<br>Tiempo restante para pagar antes del embargo: <span id="debt-timer">20</span>s<br><button class="action-btn pay-btn" onclick="payDebt()">Pagar Deuda Obligatoria</button>;
-updateUI();
+if (game.soles >= debtVal) {
+game.soles -= debtVal;
+endEvent('debt-panel');
 } else {
-alert("¡No tienes suficientes Soles para saldar la deuda!");
+alert("¡No tienes suficientes Soles! Sigue haciendo clic rápido.");
 }
-}
-function triggerAttackEvent() {
-defenseClicksLeft = 15 + (stats.rebirths * 2);
-attackTimeLeft = 7;
-document.getElementById('defense-clicks').innerText = defenseClicksLeft;
-document.getElementById('attack-timer').innerText = attackTimeLeft;
-document.getElementById('attack-panel').style.display = 'block';
-attackInterval = setInterval(() => {
-attackTimeLeft--;
-document.getElementById('attack-timer').innerText = attackTimeLeft;
-if (attackTimeLeft <= 0) {
-clearInterval(attackInterval);
-attackInterval = null;
-document.getElementById('attack-panel').style.display = 'none';
-let stolen = Math.floor(stats.soles * 0.30);
-stats.soles -= stolen;
-alert(🚨 ¡Los Halcones rompieron tus defensas y se robaron ${stolen} Soles!);
-updateUI();
-}
-}, 1000);
 }
 function clickDefense() {
-if (attackInterval === null) return;
-defenseClicksLeft--;
-document.getElementById('defense-clicks').innerText = defenseClicksLeft;
-if (defenseClicksLeft <= 0) {
-clearInterval(attackInterval);
-attackInterval = null;
-document.getElementById('attack-panel').style.display = 'none';
-alert("🛡️ ¡Éxito! Lograste defender tu negocio y ahuyentaste al cartel de los Halcones.");
+if (game.activeEvent !== 'attack') return;
+clicksNeeded--;
+document.getElementById('defense-clicks').innerText = clicksNeeded;
+if (clicksNeeded <= 0) {
+// Victoria: Recompensa por defender con éxito
+game.soles += 200;
+endEvent('attack-panel');
 }
 }
-function spawnGoldenPigeon() {
-const pigeon = document.createElement('div');
-pigeon.className = 'golden-pigeon';
-pigeon.innerHTML = '🕊️';
-pigeon.style.top = Math.random() * (window.innerHeight - 100) + 'px';
-pigeon.style.left = Math.random() * (window.innerWidth - 100) + 'px';
-pigeon.onclick = function() {
-pigeon.remove();
-triggerGoldenBuff();
-};
-document.body.appendChild(pigeon);
-setTimeout(() => {
-if (pigeon.parentElement) {
-pigeon.remove();
-setTimeout(spawnGoldenPigeon, Math.random() * 60000 + 180000);
-}
-}, 12000);
-}
-function triggerGoldenBuff() {
-goldenBuffActive = true;
-document.getElementById('buff-display').style.display = 'block';
-setTimeout(() => {
-goldenBuffActive = false;
-document.getElementById('buff-display').style.display = 'none';
-setTimeout(spawnGoldenPigeon, Math.random() * 60000 + 180000);
-}, 25000);
-}
-function triggerRebirth(choice) {
-if (stats.soles < 10000) return;
-if (choice === 'sol') {
-stats.multSoles += 0.50;
-alert("¡Rebirth Exitoso! Bendición del Sol obtenida (+50% Soles).");
-} else if (choice === 'paloma') {
-stats.multPalomas += 1.00;
-alert("¡Rebirth Exitoso! Criadero Imperial obtenido (+100% Palomas).");
-} else if (choice === 'sunat') {
-stats.multDeuda *= 0.80;
-alert("¡Rebirth Exitoso! Escudo Anticrisis obtenido (-20% costos de deuda).");
-}
-stats.soles = 0;
-stats.rebirths++;
-stats.sps = 0;
-stats.pps = 0;
-stats.embargoed = false;
-items.forEach(item => {
-item.count = 0;
-item.cost = item.baseCost;
-});
-if(debtInterval) clearInterval(debtInterval);
-if(attackInterval) clearInterval(attackInterval);
-currentDebt = 0;
-document.getElementById('debt-panel').style.display = 'none';
-document.getElementById('attack-panel').style.display = 'none';
-nextDebtCycle = 60;
-renderShop();
+function endEvent(panelId) {
+clearInterval(eventInterval);
+document.getElementById(panelId).style.display = 'none';
+game.activeEvent = false;
 updateUI();
 }
-window.onload = init
+// Lanza un chequeo de evento aleatorio cada 30 segundos
+setInterval(triggerRandomEvent, 30000);
+// Inicializar el juego
+loadShop();
+loadSkills();
+updateUI();
