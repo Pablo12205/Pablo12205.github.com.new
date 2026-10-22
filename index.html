@@ -3,265 +3,287 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Perú Clicker Fixed</title>
+    <title>Perú Clicker Total - Defensa Update</title>
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
-        body { margin: 0; font-family: 'Courier New', Courier, monospace; background: #121212; color: #fff; overflow: hidden; height: 100vh; }
-        #loading-screen { position: fixed; top:0; left:0; width:100vw; height:100vh; background:#000; z-index:9999; display:flex; flex-direction:column; justify-content:center; align-items:center; }
-        .spinner { width: 50px; height: 50px; border: 5px solid #333; border-top: 5px solid #da291c; border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #game-container { display: grid; grid-template-columns: 1fr 1fr; height: 100vh; width: 100vw; display: none; }
-        .left-panel { background: linear-gradient(135deg, #200, #000); display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 20px; border-right: 3px solid #da291c; overflow-y: auto; }
-        .flag-container { position: relative; width: 220px; height: 140px; margin: 20px 0; cursor: pointer; filter: drop-shadow(0 0 15px rgba(218,41,28,0.6)); transition: transform 0.05s; display: flex; }
+        body { margin: 0; font-family: sans-serif; background: #121212; color: #fff; height: 100vh; overflow: hidden; }
+        #game-container { display: grid; grid-template-columns: 1fr 1fr; height: 100vh; width: 100vw; }
+        .left-panel { background: linear-gradient(135deg, #2a0808, #000); display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 15px; border-right: 3px solid #da291c; overflow-y: auto; }
+        .flag-container { width: 200px; height: 130px; margin: 15px 0; cursor: pointer; filter: drop-shadow(0 0 15px rgba(218,41,28,0.6)); transition: transform 0.05s; display: flex; border: 2px solid #fff; }
         .flag-stripe { height: 100%; }
         .red { background-color: #da291c; width: 33.33%; }
-        .white { background-color: #ffffff; width: 33.34%; display:flex; justify-content:center; align-items:center; font-size:40px; }
+        .white { background-color: #ffffff; width: 33.34%; display:flex; justify-content:center; align-items:center; font-size:35px; }
         .flag-container:active { transform: scale(0.92); }
-        .stats-box { background: rgba(0,0,0,0.7); border: 2px solid #da291c; border-radius: 10px; padding: 15px; width: 100%; text-align: center; box-shadow: inset 0 0 10px #da291c; }
-        .stat-line { font-size: 18px; margin: 5px 0; font-weight: bold; }
-        .debt-alert { color: #ff3333; animation: blink 1s infinite; font-size: 20px; }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .stats-box { background: rgba(0,0,0,0.8); border: 2px solid #da291c; border-radius: 10px; padding: 10px; width: 100%; text-align: center; }
+        .stat-line { font-size: 16px; margin: 4px 0; font-weight: bold; }
+        .debt-alert { color: #ff3333; font-size: 16px; font-weight: bold; }
         .right-panel { display: flex; flex-direction: column; background: #1a1a1a; height: 100vh; }
-        .tabs { display: flex; background: #000; border-bottom: 2px solid #da291c; }
-        .tab { flex: 1; padding: 15px 5px; text-align: center; background: #222; cursor: pointer; font-weight: bold; font-size: 12px; border: 1px solid #333; color: #aaa; }
-        .tab.active { background: #da291c; color: #fff; border-bottom: 1px solid transparent; }
-        .shop-content { flex: 1; overflow-y: scroll; padding: 15px; display: none; padding-bottom: 80px; }
+        .tabs { display: flex; background: #000; }
+        .tab { flex: 1; padding: 12px 2px; text-align: center; background: #222; cursor: pointer; font-weight: bold; font-size: 11px; border: 1px solid #333; color: #aaa; }
+        .tab.active { background: #da291c; color: #fff; }
+        .shop-content { flex: 1; overflow-y: scroll; padding: 10px; display: none; padding-bottom: 50px; }
         .shop-content.active { display: block; }
-        .shop-item { background: #2a2a2a; border-radius: 6px; padding: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #555; }
-        .shop-item.can-buy { border-left-color: #2ec4b6; background: #333; }
-        .item-info { display: flex; flex-direction: column; width: 70%; }
-        .item-name { font-weight: bold; font-size: 14px; color: #fff; }
-        .item-cost { font-size: 12px; color: #ffb703; margin-top: 3px; }
-        .item-effect { font-size: 11px; color: #aaa; font-style: italic; }
-        .buy-btn { background: #da291c; color: white; border: none; padding: 8px 12px; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 12px; }
-        .buy-btn:disabled { background: #555; cursor: not-allowed; }
-        .danger-panel { background: rgba(0, 0, 0, 0.85); border: 2px dashed #ffb703; border-radius: 8px; padding: 12px; width: 100%; margin-top: 15px; }
-        .defense-btn { background: #00b4d8; color: #fff; border: none; width: 100%; padding: 10px; font-weight: bold; border-radius: 5px; margin-top: 8px; cursor: pointer; font-size: 14px; }
-        .golden-pigeon { position: absolute; width: 70px; height: 70px; background: radial-gradient(circle, #ffe600 0%, rgba(0,0,0,0) 70%); font-size: 40px; display: flex; justify-content: center; align-items: center; cursor: pointer; animation: floatGolden 8s linear; z-index: 1000; filter: drop-shadow(0 0 10px #fff); }
-        @keyframes floatGolden {
-            0% { transform: translateY(100vh) scale(0.5); opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { transform: translateY(-10vh) scale(1.2); opacity: 0; }
-        }
-        .floating-text { position: absolute; color: #fff; font-weight: bold; font-size: 24px; pointer-events: none; animation: floatUp 0.8s ease-out forwards; z-index: 500; text-shadow: 2px 2px 0 #000; }
-        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-100px) scale(0.8); } }
+        .shop-item { background: #252525; border-radius: 6px; padding: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #da291c; }
+        .item-info { display: flex; flex-direction: column; width: 65%; }
+        .item-name { font-weight: bold; font-size: 13px; color: #fff; }
+        .item-cost { font-size: 11px; color: #ffb703; }
+        .buy-btn { background: #444; color: white; border: none; padding: 6px 10px; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 11px; }
+        .buy-btn.enabled { background: #2ec4b6; }
+        .danger-panel { background: rgba(0, 0, 0, 0.8); border: 1px dashed #ffb703; border-radius: 6px; padding: 8px; width: 100%; margin-top: 10px; font-size: 12px; }
+        .defense-btn { background: #ffb703; color: #000; border: none; width: 100%; padding: 8px; font-weight: bold; border-radius: 4px; margin-top: 5px; cursor: pointer; }
+        .defense-btn.enabled { background: #00b4d8; color: #fff; }
+        .golden-pigeon { position: absolute; width: 50px; height: 50px; font-size: 30px; cursor: pointer; z-index: 1000; }
+        .floating-text { position: absolute; color: #fff; font-weight: bold; font-size: 20px; pointer-events: none; animation: floatUp 0.7s ease-out forwards; text-shadow: 1px 1px 0 #000; }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-60px); } }
     </style>
 </head>
 <body>
 
-    <div id="loading-screen">
-        <h2 style="color: #da291c; margin-bottom: 5px;">PERÚ CLICKER</h2>
-        <p style="color: #aaa; font-size: 12px; margin-bottom: 20px;">Cargando interfaz instantánea...</p>
-        <div class="spinner"></div>
-    </div>
-
     <div id="game-container">
+        <!-- LADO IZQUIERDO -->
         <div class="left-panel">
             <div class="stats-box">
                 <div class="stat-line" style="color: #2ec4b6;">🕊️ Palomas: <span id="pigeons-display">0</span></div>
-                <div class="stat-line" style="color: #00b4d8;">⏱️ Por Segundo (PPS): <span id="pps-display">0</span></div>
-                <div class="stat-line" style="color: #ffb703;">✨ Rebirths: <span id="rebirths-display">0</span> <span style="font-size:11px; color:#aaa;">(Bonus: <span id="rb-bonus">0</span>%)</span></div>
+                <div class="stat-line" style="color: #00b4d8;">⏱️ PPS: <span id="pps-display">0</span></div>
+                <div class="stat-line" style="color: #ffb703;">🔄 Rebirths: <span id="rebirths-display">0</span> (+<span id="rb-bonus">0</span>%)</div>
             </div>
 
-            <div class="flag-container" id="peru-flag">
+            <div class="flag-container" id="peru-flag" onclick="clickFlag(event)">
                 <div class="flag-stripe red"></div>
                 <div class="flag-stripe white">🦙</div>
                 <div class="flag-stripe red"></div>
             </div>
 
-            <div class="danger-panel" style="border-color: #da291c;">
-                <div style="font-weight: bold; color: #da291c; font-size: 13px;">💸 SUNAT / IMPUESTOS</div>
-                <div id="debt-status" class="stat-line debt-alert" style="font-size: 15px; margin: 8px 0;">Deuda Actual: S/. 0</div>
-                <div style="font-size: 11px; color: #ccc;">¡Si supera las 5,000 palomas, la SUNAT embarga el 50% de tus PPS!</div>
+            <div class="danger-panel">
+                <div style="font-weight: bold; color: #da291c;">💸 IMPUESTOS SUNAT</div>
+                <div id="debt-status" class="debt-alert">Deuda: S/. 0</div>
+                <div style="font-size: 10px; color: #aaa;">Si pasa S/. 5,000 roban el 50% de tus PPS.</div>
             </div>
 
+            <!-- NUEVO SISTEMA DE COMPRA DE PALOMAS DEFENSORAS -->
             <div class="danger-panel">
-                <div style="font-weight: bold; color: #ffb703; font-size: 13px;">🦅 CARTEL DE LOS HALCONES</div>
-                <div style="font-size: 11px; color: #ccc; margin-top: 4px;">Nivel de Alerta: <span id="cartel-alert-level" style="color:#ff3333; font-weight:bold;">0%</span></div>
-                <div style="font-size: 11px; color: #aaa; margin: 4px 0;">Seguridad: <span id="defense-power">10</span> Pts</div>
-                <button class="defense-btn" id="btn-defend">🛡️ Contratar Seguridad (Coste: 50 Palomas)</button>
+                <div style="font-weight: bold; color: #ffb703;">🦅 CARTEL LOS HALCONES</div>
+                <div>Alerta de Ataque: <span id="cartel-alert-level" style="color:#ff3333;">0%</span></div>
+                <div>Escudo de Seguridad: <span id="defense-power">10</span> / 50 Pts</div>
+                <div style="margin-top: 5px; font-size: 11px; color: #2ec4b6;">Palomas Defensoras: <span id="defenders-count">0</span></div>
+                <button class="defense-btn" id="btn-buy-defense" onclick="buyDefender()">🪖 Comprar Paloma Defensora (Coste: <span id="defender-cost">50</span> 🕊️)</button>
             </div>
         </div>
 
+        <!-- LADO DERECHO -->
         <div class="right-panel">
             <div class="tabs">
-                <div class="tab active" onclick="switchTab('comida')">🍲 GASTRONOMÍA</div>
-                <div class="tab" onclick="switchTab('cultura')">🦙 CULTURA Y CALLE</div>
-                <div class="tab" onclick="switchTab('imperio')">👑 IMPERIO</div>
-                <div class="tab" onclick="switchTab('rebirth-tab')">🔄 REBIRTH</div>
+                <div class="tab active" id="t-comida" onclick="switchTab('comida')">🍲 COMIDA</div>
+                <div class="tab" id="t-cultura" onclick="switchTab('cultura')">🦙 CALLE</div>
+                <div class="tab" id="t-imperio" onclick="switchTab('imperio')">👑 IMPERIO</div>
+                <div class="tab" id="t-rebirth" onclick="switchTab('rebirth-tab')">🔄 REBIRTH</div>
             </div>
 
-            <div id="comida" class="shop-content active"></div>
-            <div id="cultura" class="shop-content"></div>
-            <div id="imperio" class="shop-content"></div>
+            <div id="comida" class="shop-content active">
+                <div id="list-comida"></div>
+            </div>
+
+            <div id="cultura" class="shop-content">
+                <div id="list-cultura"></div>
+            </div>
+
+            <div id="imperio" class="shop-content">
+                <div id="list-imperio"></div>
+            </div>
 
             <div id="rebirth-tab" class="shop-content">
-                <div style="background:#222; padding:20px; border-radius:8px; text-align:center; border:2px solid #ffb703;">
-                    <h3>🔄 Rebirth Ancestral</h3>
-                    <p style="color:#ffb703; font-weight:bold; font-size:16px;">Coste del Próximo Rebirth:<br><span id="rebirth-cost-display">10,000</span> Palomas</p>
-                    <button class="defense-btn" id="btn-rebirth" style="background:#da291c; font-size:16px; padding:15px;">¡EJECUTAR REBIRTH!</button>
+                <div style="background:#222; padding:15px; border-radius:8px; text-align:center; border:2px solid #ffb703; margin-top:20px;">
+                    <h3>🔄 Rebirth Incremental</h3>
+                    <p style="font-size:12px;">Reinicia tus cosas por +100% de producción permanente por nivel.</p>
+                    <p style="color:#ffb703; font-weight:bold;">Coste: <span id="rebirth-cost-display">10,000</span> Palomas</p>
+                    <button class="defense-btn" id="btn-rebirth" style="background:#da291c; color:#fff;" onclick="doRebirth()">¡REBIRTH!</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        let state = {
-            pigeons: 0, totalPigeonsEarned: 0, pps: 0, clickPower: 1,
-            rebirths: 0, rebirthCost: 10000, debt: 0, cartelAlert: 0, defense: 10,
-            purchasedItems: {}
-        };
-
-        const prefixesComida = ["Ceviche", "Lomo Saltado", "Anticucho", "Inca Kola", "Papa Huancaina", "Ají Gallina", "Arroz Pato", "Causa Rellena", "Chicha Morada", "Turrón", "Pachamanca", "Pollo Brasa", "Choritos", "Rocoto Relleno", "Juane", "Tacacho", "Suspiro Lima", "Mazamorra", "Picarones", "Tamal"];
-        const suffixesComida = ["Carretilla", "Mercado", "Tía Veneno", "Huarique", "Plaza", "Barrio", "Chifa", "Picantería"];
+        let pigeons = 0;
+        let totalPigeons = 0;
+        let pps = 0;
+        let rebirths = 0;
+        let rebirthCost = 10000;
+        let debt = 0;
+        let cartelAlert = 0;
         
-        const itemsCultura = ["Mototaxi Tuneado", "Micro busero", "Llama Salvaje", "Moneda de Un Sol", "Gorro Chullo", "Pollo Gamarra", "Sandalía Jebe", "Radio Chofer", "Cobrador Cúster", "Línea Uno", "Zampoña Oro", "Charango Eléctrico", "Camiseta Perú", "Pelota Trapo", "Kiosko Dulces", "Carreta Emoliente", "Pollada Bailable", "Bingo Vecinal", "Torito Pucará", "Retablo Ayacuchano", "Máscara Diablada"];
-        const itemsImperio = ["Línea Nazca", "Andén Cultivo", "Sacsayhuamán II", "Túnel Despejado", "Puente Piedra", "Megapuerto Chancay", "Aeropuerto Nuevo", "Carretera Central", "Estadio Nacional", "Faro Marina", "Palacio Gobierno", "Plaza Mayor", "Teleférico Cusco", "Tren Bala", "Chan Chan II", "Huaca del Sol", "Circuito Agua", "Rascacielos Gamarra"];
+        // Variables de la nueva mecánica de defensa
+        let defense = 10; 
+        let defenders = 0;
+        let defenderCost = 50;
 
-        let dbComida = [], dbCultura = [], dbImperio = [];
+        let inventory = {};
 
-        function bootstrapGame() {
-            dbComida = []; dbCultura = []; dbImperio = [];
-            
-            // Generar exactamente 42 objetos ultra ligeros por tienda
-            for(let i=1; i<=42; i++) {
+        const comidas = ["Ceviche de Carretilla", "Lomo Saltado", "Anticucho de Esquina", "Inca Kola Helada", "Papa a la Huancaina", "Ají de Gallina", "Arroz con Pato", "Causa Rellena", "Chicha Morada", "Turrón de Doña Pepa", "Pachamanca", "Pollo a la Brasa", "Choritos a la Chalaca", "Rocoto Relleno", "Juane Selvático", "Tacacho con Cecina", "Suspiro a la Limeña", "Mazamorra Morada", "Picarones con Miel", "Tamal de Pollo", "Humita Dulce", "Carapulcra Chinchana", "Sopa Seca", "Seco de Cordero", "Aguadito de Pollo", "Chicharrón de Chancho", "Caldo de Mote", "Adobo Arequipeño", "Chupe de Camarones", "Leche de Tigre", "Pan con Chicharrón", "Salchipapa Extrema", "Emoliente Caliente", "Arroz Chaufa de Chifa", "Mostrito con Todo", "Chanfainita", "Tallarines Verdes", "Pescado Frito", "Sanguito Antiguo", "Ranfañote", "Frejolada", "Sopa Criolla", "Butifarra"];
+        const calles = ["Mototaxi Tuneado", "Micro Busero", "Llama de Paseo", "Moneda de Un Sol", "Chullo de Alpaca", "Pollo de Gamarra", "Sandalía de Jebe", "Radio de Micro", "Cobrador de Cúster", "Línea Uno Libre", "Zampoña de Caña", "Charango Viejo", "Camiseta Blanquirroja", "Pelota de Trapo", "Kiosko de Periódico", "Carreta Emolientera", "Pollada Pro-Fondos", "Bingo de Barrio", "Torito de Pucará", "Retablo Ayacuchano", "Máscara de Diablada", "Disfraz Marinera", "Tumi de Pared", "Piedra 12 Ángulos", "Llavero Machu Picchu", "Postal del Misti", "Afiche Neón Chicha", "Megáfono Ambulante", "Triciclo de Fruta", "Raspadilla de Calle", "Algodón de Azúcar", "Billete Santa Rosa", "Estampita de Tráfico", "Pintura de Choque", "Vendedor de Helados", "Canillita", "Lustrabotas", "Organillero", "Cevichero Nocturno", "Maíz Tostado", "Anticuario", "Aficionado de Tribuna", "Silbato de Policía"];
 Usa el código con precaución.
-let p1 = prefixesComida[i % prefixesComida.length];
-let s1 = suffixesComida[Math.floor((i * 3) % suffixesComida.length)];
-dbComida.push({ id: comida_${i}, name: ${p1} de ${s1} #${i}, cost: Math.round(10 * Math.pow(1.23, i)), pps: (i * 0.4) });
+const imperios = ["Línea de Nazca", "Andén de Moray", "Sacsayhuamán", "Túnel Verde", "Puente de Piedra", "Megapuerto Chancay", "Aeropuerto Expandido", "Carretera Central", "Estadio Nacional", "Faro de Miraflores", "Palacio de Gobierno", "Plaza de Armas", "Teleférico Kuelap", "Tren de la Sierra", "Huaca del Sol", "Circuito del Agua", "Rascacielos Gamarra", "Santuario Pachacámac", "Mina de Oro Orcopampa", "Refinería Talara", "Camino Inca Qapac", "Puente Q'eswachaka", "Canal Cumbemayo", "Monumento Pachacútec", "Reserva Paracas", "Cañón del Colca", "Chan Chan", "Huaca de la Luna", "Centro Pucusana", "Baños del Inca", "Machu Picchu Real", "Ollantaytambo", "Choquequirao", "Písac", "Sillustani", "Chavín de Huántar", "Caral Antigua", "Kuelap Fortaleza", "Vilcashuamán", "Raqaqchi", "Cahuachi", "Tipón"];
+function init() {
+buildList('list-comida', comidas, 10, 1.22, 0.4);
+buildList('list-cultura', calles, 400, 1.23, 3.5);
+buildList('list-imperio', imperios, 12000, 1.24, 40);
+setInterval(loop, 1000);
+setInterval(spawnGolden, 30000);
+update();
 }
-for(let i=1; i<=42; i++) {
-let name = itemsCultura[i % itemsCultura.length] + " v" + i;
-dbCultura.push({ id: cultura_${i}, name: name, cost: Math.round(500 * Math.pow(1.24, i)), pps: (i * 3.5) });
-}
-for(let i=1; i<=42; i++) {
-let name = itemsImperio[i % itemsImperio.length] + " Imperial " + i;
-dbImperio.push({ id: imperio_${i}, name: name, cost: Math.round(15000 * Math.pow(1.25, i)), pps: (i * 45) });
-}
-renderShop('comida', dbComida);
-renderShop('cultura', dbCultura);
-renderShop('imperio', dbImperio);
-// Cambiar pantallas de forma inmediata eliminando animaciones lentas
-document.getElementById('loading-screen').style.display = 'none';
-document.getElementById('game-container').style.display = 'grid';
-updateUI();
-}
-function renderShop(containerId, data) {
-const container = document.getElementById(containerId);
+function buildList(divId, array, baseCost, factor, basePps) {
+let container = document.getElementById(divId);
 let html = '';
-for(let i=0; i<data.length; i++) {
-let item = data[i];
-html += <div class="shop-item" id="item-card-${item.id}"> <div class="item-info"> <span class="item-name">${item.name}</span> <span class="item-cost">Coste: <span id="cost-val-${item.id}">${item.cost}</span> 🕊️</span> <span class="item-effect">+${item.pps.toFixed(1)} PPS</span> </div> <button class="buy-btn" id="btn-${item.id}" onclick="buyItem('${item.id}', ${item.cost}, ${item.pps})">Comprar (<span id="count-${item.id}">0</span>)</button> </div>;
+for(let i = 0; i < 42; i++) {
+let name = array[i % array.length];
+let id = divId + "_" + i;
+let cost = Math.round(baseCost * Math.pow(factor, i));
+let ppsVal = basePps * (i + 1);
+inventory[id] = { count: 0, cost: cost, baseCost: cost, factor: factor, pps: ppsVal };
+html += <div class="shop-item"> <div class="item-info"> <span class="item-name">${name}</span> <span class="item-cost">Coste: <span id="c-${id}">${cost}</span> 🕊️</span> <span style="font-size:10px;color:#aaa;">+${ppsVal.toFixed(1)} PPS</span> </div> <button class="buy-btn" id="b-${id}" onclick="buy('${id}')">Comprar (<span id="n-${id}">0</span>)</button> </div>;
 }
 container.innerHTML = html;
 }
-function switchTab(tabId) {
-document.querySelectorAll('.shop-content').forEach(el => el.classList.remove('active'));
-document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-document.getElementById(tabId).classList.add('active');
-event.currentTarget.classList.add('active');
+function switchTab(id) {
+document.querySelectorAll('.shop-content').forEach(e => e.classList.remove('active'));
+document.querySelectorAll('.tab').forEach(e => e.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+if(id === 'comida') document.getElementById('t-comida').classList.add('active');
+if(id === 'cultura') document.getElementById('t-cultura').classList.add('active');
+if(id === 'imperio') document.getElementById('t-imperio').classList.add('active');
+if(id === 'rebirth-tab') document.getElementById('t-rebirth').classList.add('active');
 }
-function buyItem(id, baseCost, ppsGain) {
-let currentCount = state.purchasedItems[id] || 0;
-let currentCost = Math.round(baseCost * Math.pow(1.15, currentCount));
-if (state.pigeons >= currentCost) {
-state.pigeons -= currentCost;
-state.purchasedItems[id] = currentCount + 1;
-let nextCost = Math.round(baseCost * Math.pow(1.15, state.purchasedItems[id]));
-document.getElementById(cost-val-${id}).innerText = nextCost.toLocaleString();
-document.getElementById(count-${id}).innerText = state.purchasedItems[id];
-recalculatePPS();
-updateUI();
+function clickFlag(e) {
+let gain = 1 + rebirths;
+pigeons += gain;
+totalPigeons += gain;
+let textX = e ? e.clientX : 100;
+let textY = e ? e.clientY : 200;
+let fl = document.createElement('div');
+fl.className = 'floating-text';
+fl.style.left = textX + 'px';
+fl.style.top = textY + 'px';
+fl.innerText = +${gain};
+document.body.appendChild(fl);
+setTimeout(() => fl.remove(), 700);
+update();
+}
+function buy(id) {
+let item = inventory[id];
+if(pigeons >= item.cost) {
+pigeons -= item.cost;
+item.count++;
+item.cost = Math.round(item.baseCost * Math.pow(item.factor, item.count));
+document.getElementById(c-${id}).innerText = item.cost.toLocaleString();
+document.getElementById(n-${id}).innerText = item.count;
+recalc();
+update();
 }
 }
-function recalculatePPS() {
-let totalPPS = 0;
-dbComida.forEach(item => { totalPPS += (state.purchasedItems[item.id] || 0) * item.pps; });
-dbCultura.forEach(item => { totalPPS += (state.purchasedItems[item.id] || 0) * item.pps; });
-dbImperio.forEach(item => { totalPPS += (state.purchasedItems[item.id] || 0) * item.pps; });
-state.pps = totalPPS * (1 + state.rebirths);
+function recalc() {
+let total = 0;
+for(let key in inventory) {
+total += inventory[key].count * inventory[key].pps;
 }
-document.getElementById('peru-flag').addEventListener('click', function(e) {
-let gain = state.clickPower * (1 + state.rebirths);
-state.pigeons += gain;
-state.totalPigeonsEarned += gain;
-createFloatingText(e.clientX, e.clientY, +${gain.toFixed(0)} 🕊️);
-updateUI();
-});
-function createFloatingText(x, y, text) {
-const el = document.createElement('div');
-el.className = 'floating-text';
-el.style.left = ${x || 100}px;
-el.style.top = ${y || 200}px;
-el.innerText = text;
-document.body.appendChild(el);
-setTimeout(() => el.remove(), 800);
+pps = total * (1 + rebirths);
 }
-function gameLoop() {
-let actualPPS = state.debt > 5000 ? state.pps * 0.5 : state.pps;
-state.pigeons += actualPPS;
-state.totalPigeonsEarned += actualPPS;
-state.debt += Math.round(5 + (state.pps * 0.05));
-state.cartelAlert += 2;
-if (state.cartelAlert >= 100) {
-state.cartelAlert = 0;
-if (state.defense >= 50) {
-state.defense -= 30;
-alert("🚨 ¡Tu seguridad repelió al Cartel de los Halcones!");
+// FUNCIÓN ACTUALIZADA: COMPRAR PALOMAS DEFENSORAS CON PRECIO ESCALABLE
+function buyDefender() {
+if(pigeons >= defenderCost) {
+pigeons -= defenderCost;
+defenders++;
+// Cada paloma defensora aumenta de costo un 20%
+defenderCost = Math.round(defenderCost * 1.20);
+update();
+}
+}
+function loop() {
+let currentPps = debt > 5000 ? pps * 0.5 : pps;
+pigeons += currentPps;
+totalPigeons += currentPps;
+debt += Math.round(5 + (pps * 0.05));
+cartelAlert += 2;
+// Las palomas defensoras suben tu escudo de seguridad automáticamente cada segundo (+1 por paloma)
+if(defenders > 0) {
+defense += defenders;
+if(defense > 50) defense = 50; // Límite de escudo para resistir el golpe
+}
+if(cartelAlert >= 100) {
+cartelAlert = 0;
+// Para defenderte con éxito del Cartel necesitas mínimo 50 puntos de Escudo
+if(defense >= 50) {
+defense = 0; // El escudo absorbe el golpe por completo y se destruye
+alert("🚨 ¡El Cartel de los Halcones atacó! Tus Palomas Defensoras lucharon con valor, contuvieron el asalto y salvaron tus recursos.");
 } else {
-let loss = Math.round(state.pigeons * 0.3);
-state.pigeons -= loss;
-alert(🚨 ¡Asalto del Cartel! Te robaron ${loss} palomas.);
+let loss = Math.round(pigeons * 0.3);
+pigeons -= loss;
+alert(🚨 ¡Asalto del Cartel de los Halcones! Tu nivel de seguridad actual (${defense}/50 Pts) es insuficiente. Te robaron ${loss.toLocaleString()} palomas.);
 }
 }
-updateUI();
+update();
 }
-document.getElementById('btn-defend').addEventListener('click', function() {
-if (state.pigeons >= 50) { state.pigeons -= 50; state.defense += 25; updateUI(); }
-});
-function spawnGoldenPigeon() {
-const golden = document.createElement('div');
-golden.className = 'golden-pigeon';
-golden.innerHTML = '🕊️✨';
-golden.style.left = Math.random() * 70 + 'vw';
-golden.style.top = Math.random() * 60 + 'vh';
-golden.addEventListener('click', function() {
-let reward = Math.round(Math.max(100, state.totalPigeonsEarned * 0.2));
-state.pigeons += reward;
-alert(¡Paloma de Oro! Recibes +${reward} palomas.);
-golden.remove();
-updateUI();
-});
-document.body.appendChild(golden);
-setTimeout(() => { if(golden) golden.remove(); }, 8000);
-}
-document.getElementById('btn-rebirth').addEventListener('click', function() {
-if (state.pigeons >= state.rebirthCost) {
-state.rebirths += 1;
-state.pigeons = 0; state.pps = 0; state.debt = 0; state.cartelAlert = 0; state.defense = 10;
-state.purchasedItems = {};
-state.rebirthCost = Math.round(state.rebirthCost * 4.5);
-bootstrapGame();
-alert("🔄 ¡Rebirth Exitoso! Producción duplicada.");
-}
-});
-function updateUI() {
-document.getElementById('pigeons-display').innerText = Math.floor(state.pigeons).toLocaleString();
-document.getElementById('pps-display').innerText = state.pps.toFixed(1);
-document.getElementById('rebirths-display').innerText = state.rebirths;
-document.getElementById('rb-bonus').innerText = (state.rebirths * 100);
-document.getElementById('rebirth-cost-display').innerText = state.rebirthCost.toLocaleString();
-document.getElementById('cartel-alert-level').innerText = state.cartelAlert + '%';
-document.getElementById('defense-power').innerText = state.defense;
-const debtStatus = document.getElementById('debt-status');
-debtStatus.innerText = Deuda: S/. ${state.debt.toLocaleString()};
-debtStatus.style.color = state.debt > 5000 ? '#ff0000' : '#ffb703';
-document.getElementById('btn-rebirth').disabled = (state.pigeons < state.rebirthCost);
-}
-// Bucles optimizados independientes para evitar bloqueos de hilos de ejecución
-window.onload = function() {
-bootstrapGame();
-setInterval(gameLoop, 1000);
-setInterval(spawnGoldenPigeon, 30000);
+function spawnGolden() {
+let g = document.createElement('div');
+g.className = 'golden-pigeon';
+g.innerHTML = '🕊️✨';
+g.style.left = Math.random() * 60 + 10 + 'vw';
+g.style.top = Math.random() * 60 + 10 + 'vh';
+g.onclick = function() {
+let prize = Math.round(Math.max(100, totalPigeons * 0.2));
+pigeons += prize;
+alert(¡Paloma Dorada atrapada! +${prize.toLocaleString()} palomas.);
+g.remove();
+update();
 };
+document.body.appendChild(g);
+setTimeout(() => g.remove(), 7000);
+}
+function doRebirth() {
+if(pigeons >= rebirthCost) {
+rebirths++;
+pigeons = 0; pps = 0; debt = 0; cartelAlert = 0; defense = 10;
+defenders = 0; defenderCost = 50; // Reseteo de defensas
+rebirthCost = Math.round(rebirthCost * 4.5);
+for(let key in inventory) {
+inventory[key].count = 0;
+inventory[key].cost = inventory[key].baseCost;
+document.getElementById(c-${key}).innerText = inventory[key].cost;
+document.getElementById(n-${key}).innerText = '0';
+}
+recalc();
+update();
+alert("🔄 ¡Ascenso completado! Producción base duplicada.");
+}
+}
+function update() {
+document.getElementById('pigeons-display').innerText = Math.floor(pigeons).toLocaleString();
+document.getElementById('pps-display').innerText = pps.toFixed(1);
+document.getElementById('rebirths-display').innerText = rebirths;
+document.getElementById('rb-bonus').innerText = (rebirths * 100);
+document.getElementById('rebirth-cost-display').innerText = rebirthCost.toLocaleString();
+document.getElementById('cartel-alert-level').innerText = cartelAlert + '%';
+document.getElementById('defense-power').innerText = defense;
+// Sincronizar textos de la interfaz de defensa
+document.getElementById('defenders-count').innerText = defenders;
+document.getElementById('defender-cost').innerText = defenderCost.toLocaleString();
+let dStat = document.getElementById('debt-status');
+dStat.innerText = Deuda: S/. ${debt.toLocaleString()};
+if(debt > 5000) {
+dStat.innerText += " (¡EMBARGO ACTIVADO!)";
+dStat.style.color = "#ff3333";
+} else {
+dStat.style.color = "#ffb703";
+}
+// Iluminar botón de compra de defensas
+let btnDef = document.getElementById('btn-buy-defense');
+if(pigeons >= defenderCost) btnDef.classList.add('enabled');
+else btnDef.classList.remove('enabled');
+for(let key in inventory) {
+let btn = document.getElementById(b-${key});
+if(btn) {
+if(pigeons >= inventory[key].cost) btn.classList.add('enabled');
+else btn.classList.remove('enabled');
+}
+}
+document.getElementById('btn-rebirth').disabled = (pigeons < rebirthCost);
+}
+init()
